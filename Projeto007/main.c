@@ -77,7 +77,7 @@ int main()
         switch (event.type)
         {
         case ALLEGRO_EVENT_TIMER:
-            if (key[ALLEGRO_KEY_W])
+            if (key[ALLEGRO_KEY_W] || key[ALLEGRO_KEY_SPACE])
                 spy.y -= spy.vel_y;
             if (key[ALLEGRO_KEY_S])
                 spy.y += spy.vel_y;
