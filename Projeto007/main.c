@@ -4,6 +4,8 @@
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_primitives.h>
 
+void check();
+
 typedef struct Personagem {
     float x;
     float y;
@@ -11,9 +13,10 @@ typedef struct Personagem {
     float tam_y;
     float vel_x;
     float vel_y;
+    bool grounded;
 } Personagem;
 
-void must_init(bool test, const char* description)
+void check(bool test, const char* description)
 {
     if (test) return;
 
@@ -23,26 +26,29 @@ void must_init(bool test, const char* description)
 
 int main()
 {
-    must_init(al_init(), "allegro");
-    must_init(al_install_keyboard(), "keyboard");
+    check(al_init(), "allegro");
+    check(al_install_keyboard(), "keyboard");
 
     ALLEGRO_TIMER* timer = al_create_timer(1.0 / 30.0);
-    must_init(timer, "timer");
+    check(timer, "timer");
 
     ALLEGRO_EVENT_QUEUE* queue = al_create_event_queue();
-    must_init(queue, "queue");
+    check(queue, "queue");
 
     al_set_new_display_option(ALLEGRO_SAMPLE_BUFFERS, 1, ALLEGRO_SUGGEST);
     al_set_new_display_option(ALLEGRO_SAMPLES, 8, ALLEGRO_SUGGEST);
     al_set_new_bitmap_flags(ALLEGRO_MIN_LINEAR | ALLEGRO_MAG_LINEAR);
 
-    ALLEGRO_DISPLAY* disp = al_create_display(640, 480);
-    must_init(disp, "display");
+    float disp_x, disp_y;
+    disp_x = 640;
+    disp_y = 480;
+    ALLEGRO_DISPLAY* disp = al_create_display(disp_x, disp_y);
+    check(disp, "display");
 
     ALLEGRO_FONT* font = al_create_builtin_font();
-    must_init(font, "font");
+    check(font, "font");
 
-    must_init(al_init_primitives_addon(), "primitives");
+    check(al_init_primitives_addon(), "primitives");
 
     al_register_event_source(queue, al_get_keyboard_event_source());
     al_register_event_source(queue, al_get_display_event_source(disp));
@@ -56,6 +62,10 @@ int main()
 
     //Personagem spy = // x, y, tam_x, tam_y, vel_x, vel_y
     Personagem spy = { 200, 200, 20, 20, 5, 5 };
+
+    float gravidade = 0.5f;
+
+    const chao = disp_y;
 
     ALLEGRO_COLOR vermelho = al_map_rgb(255, 0, 0);
 
@@ -115,6 +125,24 @@ int main()
             al_clear_to_color(al_map_rgb(0, 0, 0));
             al_draw_textf(font, al_map_rgb(255, 255, 255), 0, 0, 0, "X: %.1f Y: %.1f", spy.x, spy.y);
             al_draw_filled_rectangle(spy.x, spy.y, spy.x + spy.tam_x, spy.y + spy.tam_y, vermelho);
+
+            
+            spy.x += spy.vel_x;
+            spy.y += spy.vel_y;
+            spy.vel_y += gravidade;
+
+            //TO:DO(apagar depois)
+            //  Fazer um sistema de colisão tanto no "chão" quanto na "parede" da tela.
+            //  Minha ideia seria criar uma função que checa se está no chão, caso esteja, a velocidade
+            //  do personagem é zerada, porém de alguma forma codar para que o pulo ainda seja possível de realizar.
+
+            if (spy.y + spy.tam_y >= chao) {
+                spy.y = chao - spy.tam_y;
+                spy.vel_y = 0;
+            }
+
+            if (spy.y + spy.tam_y >= 480 || spy.y - spy.tam_y <= 0)
+                spy.vel_y *= -1;
 
             al_flip_display();
 
