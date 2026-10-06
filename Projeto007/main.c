@@ -16,6 +16,106 @@ typedef struct Personagem {
     bool grounded;
 } Personagem;
 
+typedef struct Cenario {
+    float x;
+    float y;
+	float w;
+    float h;
+} Cenario;
+
+#define MAX_PLATAFORMAS 10
+#define ALCANCE_COLETA  20.0f
+#define ALTURA_CHAO 30
+
+Cenario plataformas[MAX_PLATAFORMAS];
+int n_plataformas = 0;
+
+Cenario coletavel;
+bool coletado = false;
+int documentos = 0;
+
+void add_plataforma(float x, float y, float w, float h){
+    if (n_plataformas >= MAX_PLATAFORMAS) 
+        return;
+
+    plataformas[n_plataformas].x = x;
+    plataformas[n_plataformas].y = y;
+    plataformas[n_plataformas].w = w;
+    plataformas[n_plataformas].h = h;
+    n_plataformas++;
+}
+
+bool se_tocam(Cenario a, Cenario b){
+    if (a.x < b.x + b.w){
+        if (a.x + a.w > b.x){
+            if (a.y < b.y + b.h){
+                if (a.y + a.h > b.y){
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+void iniciar_cenario(float largura, float altura){
+    n_plataformas = 0;
+    coletado = false;
+    documentos = 0;
+
+    float topo_chao = altura - ALTURA_CHAO;
+    float altura_apoio = 130;
+    float altura_grande = 260;
+
+    add_plataforma(0, topo_chao, largura, ALTURA_CHAO);
+    add_plataforma(0, -20, largura, 20);
+    add_plataforma(-20, 0, 20, altura);
+    add_plataforma(largura, 0, 20, altura);
+
+    add_plataforma(320, topo_chao - altura_apoio, 140, 12);
+
+    add_plataforma(512, topo_chao - altura_grande, 400, 12);
+    
+    coletavel.w = 14;
+    coletavel.h = 18;
+    coletavel.x = largura - 80;
+    coletavel.y = topo_chao - coletavel.h;
+}   
+
+bool colisao_cenario(Cenario r){             // retorna true se o personagem bate em alguma plataforma (chão, teto e paredes)
+    for (int i = 0; i < n_plataformas; i++)
+        if (se_tocam(r, plataformas[i])) 
+            return true;
+    return false;
+}
+
+void coletar_cenario(Cenario jogador){
+    if (coletado) 
+        return;
+
+    Cenario alcance = {jogador.x - ALCANCE_COLETA, jogador.y - ALCANCE_COLETA, jogador.w + 2 * ALCANCE_COLETA, jogador.h + 2 * ALCANCE_COLETA};
+
+    if (se_tocam(alcance, coletavel)){
+        coletado = true;
+        documentos++;
+    }
+}
+
+void desenhar_cenario(void){
+    ALLEGRO_COLOR cor_plat = al_map_rgb(255, 255, 255);
+    ALLEGRO_COLOR cor_borda = al_map_rgb(140, 145, 160);
+    ALLEGRO_COLOR cor_papel = al_map_rgb(90, 95, 110);
+
+    for (int i = 0; i < n_plataformas; i++){
+        al_draw_filled_rectangle(plataformas[i].x, plataformas[i].y, plataformas[i].x + plataformas[i].w, plataformas[i].y + plataformas[i].h, cor_plat);
+        al_draw_rectangle(plataformas[i].x, plataformas[i].y, plataformas[i].x + plataformas[i].w, plataformas[i].y + plataformas[i].h, cor_borda, 1.0f);
+    }
+
+    if (!coletado){
+        al_draw_filled_rectangle(coletavel.x, coletavel.y, coletavel.x + coletavel.w, coletavel.y + coletavel.h, cor_papel);
+    }
+}
+
 void check(bool test, const char* description)
 {
     if (test) return;
@@ -39,11 +139,13 @@ int main()
     al_set_new_display_option(ALLEGRO_SAMPLES, 8, ALLEGRO_SUGGEST);
     al_set_new_bitmap_flags(ALLEGRO_MIN_LINEAR | ALLEGRO_MAG_LINEAR);
 
-    float disp_x, disp_y;
-    disp_x = 640;
-    disp_y = 480;
+    float disp_x = 1280;
+    float disp_y = 720;
+
     ALLEGRO_DISPLAY* disp = al_create_display(disp_x, disp_y);
     check(disp, "display");
+
+    iniciar_cenario(disp_x, disp_y);
 
     ALLEGRO_FONT* font = al_create_builtin_font();
     check(font, "font");
@@ -65,7 +167,7 @@ int main()
 
     float gravidade = 0.5f;
 
-    const chao = disp_y;
+    float chao = disp_y - ALTURA_CHAO;
 
     ALLEGRO_COLOR vermelho = al_map_rgb(255, 0, 0);
 
@@ -95,7 +197,10 @@ int main()
                 spy.x -= spy.vel_x;
             if (key[ALLEGRO_KEY_D])
                 spy.x += spy.vel_x;
-
+            if (key[ALLEGRO_KEY_E]){
+                Cenario jogador = {spy.x, spy.y, spy.tam_x, spy.tam_y};
+                coletar_cenario(jogador);
+            }
             if (key[ALLEGRO_KEY_ESCAPE])
                 done = true;
 
@@ -123,7 +228,9 @@ int main()
         if (redraw && al_is_event_queue_empty(queue))
         {
             al_clear_to_color(al_map_rgb(0, 0, 0));
-            al_draw_textf(font, al_map_rgb(255, 255, 255), 0, 0, 0, "X: %.1f Y: %.1f", spy.x, spy.y);
+            desenhar_cenario();
+            al_draw_textf(font, branco, disp_x - 10, 5, ALLEGRO_ALIGN_RIGHT, "Documentos coletados: %d", documentos);
+            al_draw_textf(font, branco, 0, 0, 0, "X: %.1f Y: %.1f", spy.x, spy.y);
             al_draw_filled_rectangle(spy.x, spy.y, spy.x + spy.tam_x, spy.y + spy.tam_y, vermelho);
 
             
@@ -141,7 +248,7 @@ int main()
                 spy.vel_y = 0;
             }
 
-            if (spy.y + spy.tam_y >= 480 || spy.y - spy.tam_y <= 0)
+            if (spy.y + spy.tam_y >= disp_y || spy.y - spy.tam_y <= 0)
                 spy.vel_y *= -1;
 
             al_flip_display();
