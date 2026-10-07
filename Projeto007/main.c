@@ -16,6 +16,18 @@ typedef struct Personagem {
     bool grounded;
 } Personagem;
 
+typedef struct NPC {
+    float x;
+    float y;
+    float tam_x;
+    float tam_y;
+    float cone_w;
+    float cone_h;
+    float vel_x;
+    float vel_y;
+    bool sentido;
+} NPC;
+
 typedef struct Cenario {
     float x;
     float y;
@@ -163,19 +175,22 @@ int main()
     ALLEGRO_EVENT event;
 
     //Personagem spy = // x, y, tam_x, tam_y, vel_x, vel_y
-    Personagem spy = { 200, 200, 20, 20, 5, 5 };
+    Personagem spy = { 200, 200, 20, 20, 0, 0};
 
-    float gravidade = 0.5f;
+    NPC guarda = {600, disp_y-30-20, 20, 20, 100, 30, 5, 0, 0};
+
+    float gravidade = 10;
 
     float chao = disp_y - ALTURA_CHAO;
 
     ALLEGRO_COLOR vermelho = al_map_rgb(255, 0, 0);
+    ALLEGRO_COLOR azul = al_map_rgb(0, 0, 255);
 
     ALLEGRO_COLOR branco = al_map_rgb(255, 255, 255);
 
 
-#define KEY_SEEN     1
-#define KEY_DOWN     2
+    #define KEY_SEEN     1
+    #define KEY_DOWN     2
 
     unsigned char key[ALLEGRO_KEY_MAX];
     memset(key, 0, sizeof(key));
@@ -189,14 +204,14 @@ int main()
         switch (event.type)
         {
         case ALLEGRO_EVENT_TIMER:
-            if (key[ALLEGRO_KEY_W] || key[ALLEGRO_KEY_SPACE])
-                spy.y -= spy.vel_y;
-            if (key[ALLEGRO_KEY_S])
-                spy.y += spy.vel_y;
+            if (key[ALLEGRO_KEY_W] && spy.vel_y == 0) {
+                spy.vel_y = -50;
+                gravidade = 8;
+            }
             if (key[ALLEGRO_KEY_A])
-                spy.x -= spy.vel_x;
+                spy.vel_x = -10;
             if (key[ALLEGRO_KEY_D])
-                spy.x += spy.vel_x;
+                spy.vel_x = 10;
             if (key[ALLEGRO_KEY_E]){
                 Cenario jogador = {spy.x, spy.y, spy.tam_x, spy.tam_y};
                 coletar_cenario(jogador);
@@ -232,24 +247,30 @@ int main()
             al_draw_textf(font, branco, disp_x - 10, 5, ALLEGRO_ALIGN_RIGHT, "Documentos coletados: %d", documentos);
             al_draw_textf(font, branco, 0, 0, 0, "X: %.1f Y: %.1f", spy.x, spy.y);
             al_draw_filled_rectangle(spy.x, spy.y, spy.x + spy.tam_x, spy.y + spy.tam_y, vermelho);
+            al_draw_filled_rectangle(guarda.x, guarda.y, guarda.x + guarda.tam_x, guarda.y + guarda.tam_y, azul);
+            al_draw_filled_triangle(guarda.x+guarda.tam_x,guarda.y+guarda.tam_y/2,
+                                    guarda.x + guarda.tam_x + guarda.cone_w, guarda.y,
+                                    guarda.x + guarda.tam_x + guarda.cone_w, guarda.y + guarda.tam_y,
+                                    branco);
 
-            
             spy.x += spy.vel_x;
             spy.y += spy.vel_y;
-            spy.vel_y += gravidade;
-
-            //TO:DO(apagar depois)
-            //  Fazer um sistema de colisão tanto no "chão" quanto na "parede" da tela.
-            //  Minha ideia seria criar uma função que checa se está no chão, caso esteja, a velocidade
-            //  do personagem é zerada, porém de alguma forma codar para que o pulo ainda seja possível de realizar.
+            if (spy.vel_y < 30) spy.vel_y += gravidade;
 
             if (spy.y + spy.tam_y >= chao) {
                 spy.y = chao - spy.tam_y;
                 spy.vel_y = 0;
+                spy.vel_x -= spy.vel_x/2.5;
             }
 
             if (spy.y + spy.tam_y >= disp_y || spy.y - spy.tam_y <= 0)
                 spy.vel_y *= -1;
+
+            guarda.x += guarda.vel_x;
+            if (guarda.x + guarda.tam_x >= disp_x || guarda.x <= 0) {
+                guarda.vel_x *= -1;
+                guarda.sentido = !guarda.sentido;
+            }
 
             al_flip_display();
 
