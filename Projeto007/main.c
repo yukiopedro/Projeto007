@@ -25,7 +25,7 @@ typedef struct NPC {
     float cone_h;
     float vel_x;
     float vel_y;
-    bool sentido;
+    int sentido;
 } NPC;
 
 typedef struct Cenario {
@@ -177,7 +177,7 @@ int main()
     //Personagem spy = // x, y, tam_x, tam_y, vel_x, vel_y
     Personagem spy = { 200, 200, 20, 20, 0, 0};
 
-    NPC guarda = {600, disp_y-30-20, 20, 20, 100, 30, 5, 0, 0};
+    NPC guarda = {600, disp_y-30-20, 20, 20, 100, 30, 5, 0, 1};
 
     float gravidade = 10;
 
@@ -204,7 +204,7 @@ int main()
         switch (event.type)
         {
         case ALLEGRO_EVENT_TIMER:
-            if (key[ALLEGRO_KEY_W] && spy.vel_y == 0) {
+            if ((key[ALLEGRO_KEY_W] || key[ALLEGRO_KEY_SPACE]) && spy.vel_y == 0) {
                 spy.vel_y = -50;
                 gravidade = 8;
             }
@@ -248,10 +248,7 @@ int main()
             al_draw_textf(font, branco, 0, 0, 0, "X: %.1f Y: %.1f", spy.x, spy.y);
             al_draw_filled_rectangle(spy.x, spy.y, spy.x + spy.tam_x, spy.y + spy.tam_y, vermelho);
             al_draw_filled_rectangle(guarda.x, guarda.y, guarda.x + guarda.tam_x, guarda.y + guarda.tam_y, azul);
-            al_draw_filled_triangle(guarda.x+guarda.tam_x,guarda.y+guarda.tam_y/2,
-                                    guarda.x + guarda.tam_x + guarda.cone_w, guarda.y,
-                                    guarda.x + guarda.tam_x + guarda.cone_w, guarda.y + guarda.tam_y,
-                                    branco);
+            al_draw_filled_rectangle(guarda.x+guarda.tam_x*(guarda.sentido==1), guarda.y - guarda.cone_h, guarda.x + (guarda.tam_x + guarda.cone_w)*guarda.sentido, guarda.y + guarda.cone_h, branco);
 
             spy.x += spy.vel_x;
             spy.y += spy.vel_y;
@@ -266,11 +263,12 @@ int main()
             if (spy.y + spy.tam_y >= disp_y || spy.y - spy.tam_y <= 0)
                 spy.vel_y *= -1;
 
-            guarda.x += guarda.vel_x;
             if (guarda.x + guarda.tam_x >= disp_x || guarda.x <= 0) {
-                guarda.vel_x *= -1;
-                guarda.sentido = !guarda.sentido;
+                guarda.sentido *= -1;
+                printf("%d\n", guarda.sentido);
             }
+            guarda.x += guarda.vel_x * guarda.sentido;
+
 
             al_flip_display();
 
