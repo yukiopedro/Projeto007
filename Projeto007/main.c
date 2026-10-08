@@ -128,6 +128,32 @@ void desenhar_cenario(void){
     }
 }
 
+void colisao_plataforma(Personagem* jogador, float y_anterior) {
+    jogador->grounded = false;
+
+    if (jogador->vel_y < 0)
+        return;
+
+    for (int i = 0; i < n_plataformas; i++) {
+        Cenario plataforma = plataformas[i];
+
+        bool sobrepoe_plataforma =
+            jogador->x < plataforma.x + plataforma.w &&
+            jogador->x + jogador->tam_x > plataforma.x;
+
+        bool cruzou_plataforma =
+            y_anterior + jogador->tam_y <= plataforma.y &&
+            jogador->y + jogador->tam_y >= plataforma.y;
+
+        if (sobrepoe_plataforma && cruzou_plataforma) {
+            jogador->y = plataforma.y - jogador->tam_y;
+            jogador->vel_y = 0;
+            jogador->grounded = true;
+            return;
+        }
+    }
+}
+
 void check(bool test, const char* description)
 {
     if (test) return;
@@ -175,7 +201,7 @@ int main()
     ALLEGRO_EVENT event;
 
     //Personagem spy = // x, y, tam_x, tam_y, vel_x, vel_y
-    Personagem spy = { 200, 200, 20, 20, 0, 0};
+    Personagem spy = { 200, 200, 20, 20, 0, 0, false};
 
     NPC guarda = {600, disp_y-30-20, 20, 20, 100, 30, 5, 0, 1};
 
@@ -204,7 +230,8 @@ int main()
         switch (event.type)
         {
         case ALLEGRO_EVENT_TIMER:
-            if ((key[ALLEGRO_KEY_W] || key[ALLEGRO_KEY_SPACE]) && spy.vel_y == 0) {
+            if ((key[ALLEGRO_KEY_W] || key[ALLEGRO_KEY_SPACE]) && spy.grounded) {
+                spy.grounded = false;
                 spy.vel_y = -50;
                 gravidade = 8;
             }
@@ -250,14 +277,18 @@ int main()
             al_draw_filled_rectangle(guarda.x, guarda.y, guarda.x + guarda.tam_x, guarda.y + guarda.tam_y, azul);
             al_draw_filled_rectangle(guarda.x+guarda.tam_x*(guarda.sentido==1), guarda.y - guarda.cone_h, guarda.x + (guarda.tam_x + guarda.cone_w)*guarda.sentido, guarda.y + guarda.cone_h, branco);
 
+            float y_anterior = spy.y;
+
             spy.x += spy.vel_x;
             spy.y += spy.vel_y;
-            if (spy.vel_y < 30) spy.vel_y += gravidade;
 
-            if (spy.y + spy.tam_y >= chao) {
-                spy.y = chao - spy.tam_y;
-                spy.vel_y = 0;
-                spy.vel_x -= spy.vel_x/2.5;
+            if (spy.vel_y < 30) 
+                spy.vel_y += gravidade;
+
+            colisao_plataforma(&spy, y_anterior);
+
+            if (spy.grounded) {
+                spy.vel_x -= spy.vel_x / 2.5;
             }
 
             if (spy.y + spy.tam_y >= disp_y || spy.y - spy.tam_y <= 0)
@@ -265,7 +296,6 @@ int main()
 
             if (guarda.x + guarda.tam_x >= disp_x || guarda.x <= 0) {
                 guarda.sentido *= -1;
-                printf("%d\n", guarda.sentido);
             }
             guarda.x += guarda.vel_x * guarda.sentido;
 
