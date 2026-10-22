@@ -155,6 +155,12 @@ int main()
 
             guarda.x += guarda.vel_x * guarda.sentido;
 
+            if (spy.tam_x + spy.x >= disp_x || spy.x <= 0) {
+
+                spy.x += spy.vel_x;
+
+            }
+                
             al_flip_display();
 
             redraw = false;
