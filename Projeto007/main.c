@@ -155,9 +155,15 @@ int main()
 
             guarda.x += guarda.vel_x * guarda.sentido;
 
-            if (spy.tam_x + spy.x >= disp_x || spy.x <= 0) {
+            if (spy.tam_x + spy.x >= disp_x) {
 
-                spy.x += spy.vel_x;
+                spy.x = disp_x - spy.tam_x;
+
+            }
+
+            if (spy.x < 0) {
+
+                spy.x = 0;
 
             }
                 
