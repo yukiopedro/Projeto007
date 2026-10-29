@@ -102,6 +102,10 @@ int main()
             if (key[ALLEGRO_KEY_ESCAPE])
                 done = true;
 
+            if (key[ALLEGRO_KEY_Q]) {
+
+            }
+
             for (int i = 0; i < ALLEGRO_KEY_MAX; i++)
                 key[i] &= ~KEY_SEEN;
             redraw = true;
