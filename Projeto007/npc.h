@@ -1,6 +1,8 @@
 #ifndef NPC_H
 #define NPC_H
 
+float gravidade = 10;
+
 typedef struct NPC {
     float x;
     float y;

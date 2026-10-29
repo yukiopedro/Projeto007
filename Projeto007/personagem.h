@@ -13,4 +13,6 @@ typedef struct Personagem {
     bool grounded;
 } Personagem;
 
+void mover(Personagem* player, char key[]);
+
 #endif // !personagem

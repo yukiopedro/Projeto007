@@ -142,6 +142,7 @@
   <ItemGroup>
     <ClCompile Include="cenario.c" />
     <ClCompile Include="main.c" />
+    <ClCompile Include="personagem.c" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
