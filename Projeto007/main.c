@@ -12,12 +12,26 @@
 
 #pragma endregion
 
+
+long frame;
+
 void check(bool test, const char* description)
 {
     if (test) return;
 
     printf("couldn't initialize %s\n", description);
     exit(1);
+}
+
+bool colisao(int ax1, int ay1, int ax2, int ay2, int bx1, int by1, int bx2, int by2) {
+
+    if (ax1 > bx2) return false;
+    if (ax2 < bx1) return false;
+    if (ay1 > by2) return false;
+    if (ay2 < by1) return false;
+
+    return true;
+
 }
 
 
@@ -103,7 +117,7 @@ int main()
                 done = true;
 
             if (key[ALLEGRO_KEY_Q]) {
-
+                
             }
 
             for (int i = 0; i < ALLEGRO_KEY_MAX; i++)
