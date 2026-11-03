@@ -9,6 +9,8 @@
 #include "personagem.h"
 #include "npc.h"
 #include "cenario.h"
+#include "menu.h"
+#include "telas.h"
 
 #pragma endregion
 
@@ -44,6 +46,15 @@ int main()
 
     iniciar_cenario(disp_x, disp_y);
 
+    Menu menu;
+    check(iniciar_menu(&menu), "menu");
+
+    TelaTexto instrucoes;
+    iniciar_instrucoes(&instrucoes);
+
+    TelaTexto creditos;
+    iniciar_creditos(&creditos);
+
     ALLEGRO_FONT* font = al_create_builtin_font();
     check(font, "font");
 
@@ -56,6 +67,7 @@ int main()
     bool done = false;
     bool redraw = true;
     bool rodando = true;
+    int tela = TELA_MENU;
 
     ALLEGRO_EVENT event;
 
@@ -68,7 +80,6 @@ int main()
 
     ALLEGRO_COLOR vermelho = al_map_rgb(255, 0, 0);
     ALLEGRO_COLOR azul = al_map_rgb(0, 0, 255);
-
     ALLEGRO_COLOR branco = al_map_rgb(255, 255, 255);
 
 #define KEY_SEEN     1
@@ -86,6 +97,11 @@ int main()
         switch (event.type)
         {
         case ALLEGRO_EVENT_TIMER:
+            if (tela != TELA_JOGO) {
+                tela = atualizar_telas(tela, &menu, key, &done);
+                redraw = true;
+                break;
+            }
             if ((key[ALLEGRO_KEY_W] || key[ALLEGRO_KEY_SPACE]) && spy.grounded) {
                 spy.grounded = false;
                 spy.vel_y = -50;
@@ -102,8 +118,7 @@ int main()
             if (key[ALLEGRO_KEY_ESCAPE])
                 done = true;
 
-            for (int i = 0; i < ALLEGRO_KEY_MAX; i++)
-                key[i] &= ~KEY_SEEN;
+            limpar_teclas(key);
             redraw = true;
             break;
 
@@ -121,6 +136,15 @@ int main()
 
         if (done)
             break;
+
+        if (tela != TELA_JOGO) {
+            if (redraw && al_is_event_queue_empty(queue)) {
+                desenhar_telas(tela, &menu, &instrucoes, &creditos, disp_x);
+                al_flip_display();
+                redraw = false;
+            }
+            continue;
+        }
 
         if (redraw && al_is_event_queue_empty(queue))
         {
@@ -177,6 +201,7 @@ int main()
     al_destroy_display(disp);
     al_destroy_timer(timer);
     al_destroy_event_queue(queue);
+    destruir_menu(&menu);
 
     return 0;
 }
