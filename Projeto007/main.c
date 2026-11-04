@@ -5,14 +5,25 @@
 #include <allegro5/allegro5.h>
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_primitives.h>
+#include <allegro5/allegro_image.h>
 #include <string.h>
 #include "personagem.h"
 #include "cenario.h"
 
 #pragma endregion
 
+typedef struct GRANADA {
 
-long frame;
+    int x, y, dx, dy;
+    int frame;
+    bool used;
+    bool chao;
+
+}GRANADA;
+
+#define granada_n 128
+
+GRANADA granada[granada_n];
 
 void check(bool test, const char* description)
 {
@@ -38,6 +49,7 @@ int main()
 {
     check(al_init(), "allegro");
     check(al_install_keyboard(), "keyboard");
+
 
     ALLEGRO_TIMER* timer = al_create_timer(1.0 / 30.0);
     check(timer, "timer");
@@ -170,6 +182,7 @@ int main()
                 spy.x = 0;
 
             }
+
                 
             al_flip_display();
 
