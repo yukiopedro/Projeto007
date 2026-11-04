@@ -19,10 +19,14 @@ typedef struct Personagem {
     bool vivo;
 } Personagem;
 
+enum tipos_npc{
+    GUARDA
+};
 typedef struct NPC {
     Personagem p;
     float cone_w;
     float cone_h;
+    int tipo;
 } NPC;
 
 void mover_player(Personagem* player, char key[]);

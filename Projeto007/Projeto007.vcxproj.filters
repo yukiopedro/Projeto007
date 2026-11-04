@@ -32,9 +32,6 @@
     <ClInclude Include="cenario.h">
       <Filter>Arquivos de Cabeçalho</Filter>
     </ClInclude>
-    <ClInclude Include="npc.h">
-      <Filter>Arquivos de Cabeçalho</Filter>
-    </ClInclude>
     <ClInclude Include="personagem.h">
       <Filter>Arquivos de Cabeçalho</Filter>
     </ClInclude>
