@@ -13,17 +13,91 @@
 #pragma endregion
 
 typedef struct GRANADA {
-
-    int x, y, dx, dy;
+    float x, y, dx, dy;
     int frame;
     bool used;
     bool chao;
+} GRANADA;
 
-}GRANADA;
+#define GRANADA_LARGURA 20.0f
+#define GRANADA_ALTURA 20.0f
+#define GRANADA_GRAVIDADE 1.0f
+#define GRANADA_FADE_TICKS 30
 
-#define granada_n 128
+GRANADA granada = { 0 };
+ALLEGRO_BITMAP* imagem_granada = NULL;
+bool jogar_solicitado = false;
 
-GRANADA granada[granada_n];
+void jogar_granada(GRANADA* g, const Personagem* spy)
+{
+    if (g->used)
+        return;
+
+    g->x = spy->x + (spy->tam_x - GRANADA_LARGURA) / 2.0f;
+    g->y = spy->y + spy->tam_y / 2.0f;
+    g->dx = spy->sentido ? 10.0f : -10.0f;
+    g->dy = -18.0f;
+    g->frame = 0;
+    g->used = true;
+    g->chao = false;
+}
+
+void atualizar_granada(GRANADA* g)
+{
+    if (!g->used)
+        return;
+
+    if (g->chao) {
+        if (--g->frame <= 0)
+            g->used = false;
+        return;
+    }
+
+    float y_anterior = g->y;
+
+    g->dy += GRANADA_GRAVIDADE;
+    g->x += g->dx;
+    g->y += g->dy;
+
+    Personagem colisao = { 0 };
+    colisao.x = g->x;
+    colisao.y = g->y;
+    colisao.tam_x = GRANADA_LARGURA;
+    colisao.tam_y = GRANADA_ALTURA;
+    colisao.vel_y = g->dy;
+
+    colisao_plataforma(&colisao, y_anterior);
+
+    if (colisao.grounded) {
+        g->y = colisao.y;
+        g->dy = 0;
+        g->dx = 0;
+        g->chao = true;
+        g->frame = GRANADA_FADE_TICKS;
+    }
+}
+
+void desenhar_granada(const GRANADA* g)
+{
+    if (!g->used || !imagem_granada)
+        return;
+
+    float alpha = g->chao
+        ? (float)g->frame / GRANADA_FADE_TICKS
+        : 1.0f;
+
+    ALLEGRO_COLOR tint = al_map_rgba_f(1.0f, 1.0f, 1.0f, alpha);
+    al_draw_tinted_scaled_bitmap(
+        imagem_granada,
+        tint,
+        0, 0,
+        al_get_bitmap_width(imagem_granada),
+        al_get_bitmap_height(imagem_granada),
+        g->x, g->y,
+        GRANADA_LARGURA, GRANADA_ALTURA,
+        0
+    );
+}
 
 void check(bool test, const char* description)
 {
@@ -49,6 +123,7 @@ int main()
 {
     check(al_init(), "allegro");
     check(al_install_keyboard(), "keyboard");
+    check(al_init_image_addon(), "image addon");
 
 
     ALLEGRO_TIMER* timer = al_create_timer(1.0 / 30.0);
@@ -66,6 +141,9 @@ int main()
 
     ALLEGRO_DISPLAY* disp = al_create_display(disp_x, disp_y);
     check(disp, "display");
+
+    imagem_granada = al_load_bitmap("granada.png");
+    check(imagem_granada, "granada.png");
 
     iniciar_cenario(disp_x, disp_y);
 
@@ -113,12 +191,13 @@ int main()
         {
         case ALLEGRO_EVENT_TIMER:
             mover_player(&spy, key);
+            if (jogar_solicitado) {
+                jogar_granada(&granada, &spy);
+                jogar_solicitado = false;
+            }
+            atualizar_granada(&granada);
             if (key[ALLEGRO_KEY_ESCAPE])
                 done = true;
-
-            if (key[ALLEGRO_KEY_Q]) {
-                
-            }
 
             for (int i = 0; i < ALLEGRO_KEY_MAX; i++)
                 key[i] &= ~KEY_SEEN;
@@ -126,6 +205,10 @@ int main()
             break;
 
         case ALLEGRO_EVENT_KEY_DOWN:
+            if (event.keyboard.keycode == ALLEGRO_KEY_Q &&
+                !(key[ALLEGRO_KEY_Q] & KEY_DOWN)) {
+                jogar_solicitado = true;
+            }
             key[event.keyboard.keycode] = KEY_SEEN | KEY_DOWN;
             break;
         case ALLEGRO_EVENT_KEY_UP:
@@ -144,6 +227,7 @@ int main()
         {
             al_clear_to_color(al_map_rgb(0, 0, 0));
             desenhar_cenario();
+            desenhar_granada(&granada);
             al_draw_textf(font, branco, disp_x - 10, 5, ALLEGRO_ALIGN_RIGHT, "Documentos coletados: %d", documentos);
             al_draw_textf(font, branco, 0, 0, 0, "X: %.1f Y: %.1f", spy.x, spy.y);
             al_draw_filled_rectangle(spy.x, spy.y, spy.x + spy.tam_x, spy.y + spy.tam_y, vermelho);
@@ -183,6 +267,12 @@ int main()
 
             }
 
+            if (granada.x + GRANADA_LARGURA >= disp_x) {
+                granada.x = disp_x - GRANADA_LARGURA;
+            }
+
+            if (granada.x < 0)
+                granada.x = 0;
                 
             al_flip_display();
 
@@ -190,6 +280,7 @@ int main()
         }
     }
 
+    al_destroy_bitmap(imagem_granada);
     al_destroy_font(font);
     al_destroy_display(disp);
     al_destroy_timer(timer);
