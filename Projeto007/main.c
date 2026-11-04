@@ -126,6 +126,7 @@ int main()
     check(al_init_image_addon(), "image addon");
 
 
+
     ALLEGRO_TIMER* timer = al_create_timer(1.0 / 30.0);
     check(timer, "timer");
 
@@ -198,6 +199,10 @@ int main()
             atualizar_granada(&granada);
             if (key[ALLEGRO_KEY_ESCAPE])
                 done = true;
+
+            if (key[ALLEGRO_KEY_Q]) {
+                
+            }
 
             for (int i = 0; i < ALLEGRO_KEY_MAX; i++)
                 key[i] &= ~KEY_SEEN;
