@@ -35,6 +35,7 @@ void mover_player(Personagem* player, char key[]) {
         //Cenario jogador = { spy.x, spy.y, spy.tam_x, spy.tam_y };
         //coletar_cenario(jogador);
     }
+
 }
 // Acelera o NPC
 void mover_NPC(NPC* npc) {
