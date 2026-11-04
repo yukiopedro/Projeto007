@@ -7,7 +7,6 @@
 #include <allegro5/allegro_primitives.h>
 #include <string.h>
 #include "personagem.h"
-#include "npc.h"
 #include "cenario.h"
 
 #pragma endregion
@@ -62,7 +61,8 @@ int main()
     //Personagem spy = // x, y, tam_x, tam_y, vel_x, vel_y
     Personagem spy = { 200, 200, 20, 20, 0, 0, false};
 
-    NPC guarda = {600, disp_y-30-20, 20, 20, 100, 30, 5, 0, 1};
+    NPC guarda;
+    criar_npc(&guarda, 80, 80, GUARDA);
 
     float gravidade = 10;
 
@@ -86,7 +86,7 @@ int main()
         switch (event.type)
         {
         case ALLEGRO_EVENT_TIMER:
-            mover(&spy, key);
+            mover_player(&spy, key);
             if (key[ALLEGRO_KEY_ESCAPE])
                 done = true;
 
@@ -117,8 +117,8 @@ int main()
             al_draw_textf(font, branco, disp_x - 10, 5, ALLEGRO_ALIGN_RIGHT, "Documentos coletados: %d", documentos);
             al_draw_textf(font, branco, 0, 0, 0, "X: %.1f Y: %.1f", spy.x, spy.y);
             al_draw_filled_rectangle(spy.x, spy.y, spy.x + spy.tam_x, spy.y + spy.tam_y, vermelho);
-            al_draw_filled_rectangle(guarda.x, guarda.y, guarda.x + guarda.tam_x, guarda.y + guarda.tam_y, azul);
-            al_draw_filled_rectangle(guarda.x+guarda.tam_x*(guarda.sentido==1), guarda.y - guarda.cone_h, guarda.x + (guarda.tam_x + guarda.cone_w)*guarda.sentido, guarda.y + guarda.cone_h, branco);
+            al_draw_filled_rectangle(guarda.p.x, guarda.p.y, guarda.p.x + guarda.p.tam_x, guarda.p.y + guarda.p.tam_y, azul);
+            al_draw_filled_rectangle(guarda.p.x+guarda.p.tam_x*(guarda.p.sentido), guarda.p.y - guarda.cone_h, guarda.p.x + (guarda.p.tam_x + guarda.cone_w)*guarda.p.sentido, guarda.p.y + guarda.cone_h, branco);
 
             float y_anterior = spy.y;
 
@@ -137,11 +137,11 @@ int main()
             if (spy.y + spy.tam_y >= disp_y || spy.y <= 0)
                 spy.vel_y *= -1;
 
-            if (guarda.x + guarda.tam_x >= disp_x || guarda.x <= 0) {
-                guarda.sentido *= -1;
+            if (guarda.p.x + guarda.p.tam_x >= disp_x || guarda.p.x <= 0) {
+                guarda.p.sentido *= -1;
             }
 
-            guarda.x += guarda.vel_x * guarda.sentido;
+            guarda.p.x += guarda.p.vel_x * guarda.p.sentido;
 
             if (spy.tam_x + spy.x >= disp_x) {
                 spy.x = disp_x - spy.tam_x;

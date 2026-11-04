@@ -3,9 +3,9 @@
 
 #include <stdbool.h>
 
-const float GRAVIDADE = 10;
-const float VEL_TERMINAL = 50;
-const float VEL_PERSONAGENS = 8;
+#define GRAVIDADE 10
+#define VEL_TERMINAL 50
+#define VEL_PERSONAGENS 8
 
 typedef struct Personagem {
     float x;
@@ -29,6 +29,7 @@ typedef struct NPC {
     int tipo;
 } NPC;
 
+void criar_npc(NPC* endereco, float x, float y, int tipo);
 void mover_player(Personagem* player, char key[]);
 void mover_NPC(NPC* npc);
 

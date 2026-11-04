@@ -3,6 +3,11 @@
 #include "personagem.h"
 #include <allegro5/allegro5.h>
 
+void criar_npc(NPC* endereco, float x, float y, int tipo) {
+    NPC novo_npc = { {x, y, 30, 30, 0, 0, 0, 0, 1}, 50, 30, tipo };
+    *endereco = novo_npc;
+}
+
 // Acelera o protagonista
 void mover_player(Personagem* player, char key[]) {
     if (player->grounded)
