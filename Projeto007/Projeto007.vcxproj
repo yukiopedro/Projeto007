@@ -143,6 +143,7 @@
     <ClCompile Include="cenario.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="menu.c" />
+    <ClCompile Include="mouse.c" />
     <ClCompile Include="telas.c" />
   </ItemGroup>
   <ItemGroup>
@@ -151,6 +152,7 @@
   <ItemGroup>
     <ClInclude Include="cenario.h" />
     <ClInclude Include="menu.h" />
+    <ClInclude Include="mouse.h" />
     <ClInclude Include="npc.h" />
     <ClInclude Include="personagem.h" />
     <ClInclude Include="telas.h" />

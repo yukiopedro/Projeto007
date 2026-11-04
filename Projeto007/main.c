@@ -11,6 +11,7 @@
 #include "cenario.h"
 #include "menu.h"
 #include "telas.h"
+#include "mouse.h"
 
 #pragma endregion
 
@@ -27,6 +28,7 @@ int main()
 {
     check(al_init(), "allegro");
     check(al_install_keyboard(), "keyboard");
+    check(al_install_mouse(), "mouse");
 
     ALLEGRO_TIMER* timer = al_create_timer(1.0 / 30.0);
     check(timer, "timer");
@@ -49,6 +51,12 @@ int main()
     Menu menu;
     check(iniciar_menu(&menu), "menu");
 
+    Menu pausa;
+    iniciar_pausa(&pausa, &menu);
+
+    Mouse mouse;
+    iniciar_mouse(&mouse);
+
     TelaTexto instrucoes;
     iniciar_instrucoes(&instrucoes);
 
@@ -63,6 +71,7 @@ int main()
     al_register_event_source(queue, al_get_keyboard_event_source());
     al_register_event_source(queue, al_get_display_event_source(disp));
     al_register_event_source(queue, al_get_timer_event_source(timer));
+    al_register_event_source(queue, al_get_mouse_event_source());
 
     bool done = false;
     bool redraw = true;
@@ -96,9 +105,29 @@ int main()
 
         switch (event.type)
         {
+
+        case ALLEGRO_EVENT_MOUSE_AXES:
+            atualizar_mouse(&mouse, &event);
+            break;
+        case ALLEGRO_EVENT_MOUSE_BUTTON_DOWN:
+            atualizar_mouse(&mouse, &event);
+            break;
+
         case ALLEGRO_EVENT_TIMER:
             if (tela != TELA_JOGO) {
-                tela = atualizar_telas(tela, &menu, key, &done);
+                int tela_antes = tela;
+                tela = atualizar_telas(tela, &menu, &pausa, key, &mouse, disp_x, &done);
+
+				if (tela_antes == TELA_PAUSA && tela == TELA_MENU) { // reinicia o jogo quando o jogador volta pro menu
+                    iniciar_cenario(disp_x, disp_y);
+                    spy.x = 200;
+                    spy.y = 200;
+                    spy.vel_x = 0;
+                    spy.vel_y = 0;
+                    spy.grounded = false;
+                    guarda.x = 600;
+                    guarda.sentido = 1;
+                }
                 redraw = true;
                 break;
             }
@@ -115,10 +144,13 @@ int main()
                 Cenario jogador = { spy.x, spy.y, spy.tam_x, spy.tam_y };
                 coletar_cenario(jogador);
             }
-            if (key[ALLEGRO_KEY_ESCAPE])
-                done = true;
+            if (key[ALLEGRO_KEY_ESCAPE] & KEY_SEEN) {
+                pausa.opcao = 0;
+                tela = TELA_PAUSA;
+            }
 
             limpar_teclas(key);
+            limpar_mouse(&mouse);
             redraw = true;
             break;
 
@@ -137,9 +169,9 @@ int main()
         if (done)
             break;
 
-        if (tela != TELA_JOGO) {
+        if (tela != TELA_JOGO && tela != TELA_PAUSA) {
             if (redraw && al_is_event_queue_empty(queue)) {
-                desenhar_telas(tela, &menu, &instrucoes, &creditos, disp_x);
+                desenhar_telas(tela, &menu, &pausa, &instrucoes, &creditos, disp_x);
                 al_flip_display();
                 redraw = false;
             }
@@ -155,6 +187,13 @@ int main()
             al_draw_filled_rectangle(spy.x, spy.y, spy.x + spy.tam_x, spy.y + spy.tam_y, vermelho);
             al_draw_filled_rectangle(guarda.x, guarda.y, guarda.x + guarda.tam_x, guarda.y + guarda.tam_y, azul);
             al_draw_filled_rectangle(guarda.x+guarda.tam_x*(guarda.sentido==1), guarda.y - guarda.cone_h, guarda.x + (guarda.tam_x + guarda.cone_w)*guarda.sentido, guarda.y + guarda.cone_h, branco);
+
+            if (tela == TELA_PAUSA) {
+                desenhar_pausa(&pausa, disp_x, disp_y);
+                al_flip_display();
+                redraw = false;
+                continue;
+            }
 
             float y_anterior = spy.y;
 
@@ -201,7 +240,6 @@ int main()
     al_destroy_display(disp);
     al_destroy_timer(timer);
     al_destroy_event_queue(queue);
-    destruir_menu(&menu);
 
     return 0;
 }
