@@ -86,19 +86,7 @@ int main()
         switch (event.type)
         {
         case ALLEGRO_EVENT_TIMER:
-            if ((key[ALLEGRO_KEY_W] || key[ALLEGRO_KEY_SPACE]) && spy.grounded) {
-                spy.grounded = false;
-                spy.vel_y = -50;
-                gravidade = 8;
-            }
-            if (key[ALLEGRO_KEY_A])
-                spy.vel_x = -10;
-            if (key[ALLEGRO_KEY_D])
-                spy.vel_x = 10;
-            if (key[ALLEGRO_KEY_E]) {
-                Cenario jogador = { spy.x, spy.y, spy.tam_x, spy.tam_y };
-                coletar_cenario(jogador);
-            }
+            mover(&spy, key);
             if (key[ALLEGRO_KEY_ESCAPE])
                 done = true;
 
@@ -156,9 +144,7 @@ int main()
             guarda.x += guarda.vel_x * guarda.sentido;
 
             if (spy.tam_x + spy.x >= disp_x) {
-
                 spy.x = disp_x - spy.tam_x;
-
             }
 
             if (spy.x < 0) {
