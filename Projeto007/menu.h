@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <allegro5/allegro_font.h>
+#include "mouse.h"
 
 #define TOTAL_OPCOES 5
 #define MENU_KEY_SEEN 1
@@ -12,18 +13,29 @@
 #define ACAO_SAIR 2
 #define ACAO_INSTRUCOES 3
 #define ACAO_CREDITOS 4
+#define ACAO_CONTINUAR 5
+#define ACAO_VOLTAR_MENU 6
 
 typedef struct Menu {
     int opcao;
     int total;
+    float y_inicial;
+    float espaco;
+    const char* titulo_cima;
+    const char* titulo_baixo;
     const char* nomes[TOTAL_OPCOES];
     ALLEGRO_FONT* fonte_titulo;
     ALLEGRO_FONT* fonte_botao;
 } Menu;
 
 bool iniciar_menu(Menu* menu);
-int atualizar_menu(Menu* menu, unsigned char* key);
+bool escolher_opcao(Menu* menu, unsigned char* key, Mouse* mouse, float disp_x);
+int atualizar_menu(Menu* menu, unsigned char* key, Mouse* mouse, float disp_x);
+int atualizar_pausa(Menu* pausa, unsigned char* key, Mouse* mouse, float disp_x);
+int botao_sob_mouse(Menu* menu, Mouse* mouse, float disp_x);
 void desenhar_menu(Menu* menu, float disp_x);
-void destruir_menu(Menu* menu);
+void mover_opcao(Menu* menu, unsigned char* key);
+void iniciar_pausa(Menu* pausa, Menu* menu);
+void desenhar_pausa(Menu* pausa, float disp_x, float disp_y);
 
 #endif // !menu
