@@ -9,6 +9,9 @@
 #include <string.h>
 #include "personagem.h"
 #include "cenario.h"
+#include "menu.h"
+#include "telas.h"
+#include "mouse.h"
 
 #pragma endregion
 
@@ -123,9 +126,8 @@ int main()
 {
     check(al_init(), "allegro");
     check(al_install_keyboard(), "keyboard");
+    check(al_install_mouse(), "mouse");
     check(al_init_image_addon(), "image addon");
-
-
 
     ALLEGRO_TIMER* timer = al_create_timer(1.0 / 30.0);
     check(timer, "timer");
@@ -148,6 +150,21 @@ int main()
 
     iniciar_cenario(disp_x, disp_y);
 
+    Menu menu;
+    check(iniciar_menu(&menu), "menu");
+
+    Menu pausa;
+    iniciar_pausa(&pausa, &menu);
+
+    Mouse mouse;
+    iniciar_mouse(&mouse);
+
+    TelaTexto instrucoes;
+    iniciar_instrucoes(&instrucoes);
+
+    TelaTexto creditos;
+    iniciar_creditos(&creditos);
+
     ALLEGRO_FONT* font = al_create_builtin_font();
     check(font, "font");
 
@@ -156,10 +173,12 @@ int main()
     al_register_event_source(queue, al_get_keyboard_event_source());
     al_register_event_source(queue, al_get_display_event_source(disp));
     al_register_event_source(queue, al_get_timer_event_source(timer));
+    al_register_event_source(queue, al_get_mouse_event_source());
 
     bool done = false;
     bool redraw = true;
     bool rodando = true;
+    int tela = TELA_MENU;
 
     ALLEGRO_EVENT event;
 
@@ -173,7 +192,6 @@ int main()
 
     ALLEGRO_COLOR vermelho = al_map_rgb(255, 0, 0);
     ALLEGRO_COLOR azul = al_map_rgb(0, 0, 255);
-
     ALLEGRO_COLOR branco = al_map_rgb(255, 255, 255);
 
 #define KEY_SEEN     1
@@ -190,22 +208,53 @@ int main()
 
         switch (event.type)
         {
+
+        case ALLEGRO_EVENT_MOUSE_AXES:
+            atualizar_mouse(&mouse, &event);
+            break;
+        case ALLEGRO_EVENT_MOUSE_BUTTON_DOWN:
+            atualizar_mouse(&mouse, &event);
+            break;
+
         case ALLEGRO_EVENT_TIMER:
+            if (tela != TELA_JOGO) {
+                int tela_antes = tela;
+                tela = atualizar_telas(tela, &menu, &pausa, key, &mouse, disp_x, &done);
+
+                if (tela_antes == TELA_PAUSA && tela == TELA_MENU) { // reinicia o jogo quando o jogador volta pro menu
+                    iniciar_cenario(disp_x, disp_y);
+                    spy.x = 200;
+                    spy.y = 200;
+                    spy.vel_x = 0;
+                    spy.vel_y = 0;
+                    spy.grounded = false;
+                    criar_npc(&guarda, 80, 80, GUARDA);
+                    granada.used = false;
+                }
+                redraw = true;
+                break;
+            }
+
             mover_player(&spy, key);
+
+            if (key[ALLEGRO_KEY_E]) {
+                Cenario jogador = { spy.x, spy.y, spy.tam_x, spy.tam_y };
+                coletar_cenario(jogador);
+            }
+
             if (jogar_solicitado) {
                 jogar_granada(&granada, &spy);
                 jogar_solicitado = false;
             }
             atualizar_granada(&granada);
-            if (key[ALLEGRO_KEY_ESCAPE])
-                done = true;
 
-            if (key[ALLEGRO_KEY_Q]) {
-                
+            if (key[ALLEGRO_KEY_ESCAPE] & KEY_SEEN) {
+                pausa.opcao = 0;
+                tela = TELA_PAUSA;
             }
 
-            for (int i = 0; i < ALLEGRO_KEY_MAX; i++)
-                key[i] &= ~KEY_SEEN;
+            limpar_teclas(key);
+            limpar_mouse(&mouse);
             redraw = true;
             break;
 
@@ -228,6 +277,15 @@ int main()
         if (done)
             break;
 
+        if (tela != TELA_JOGO && tela != TELA_PAUSA) {
+            if (redraw && al_is_event_queue_empty(queue)) {
+                desenhar_telas(tela, &menu, &pausa, &instrucoes, &creditos, disp_x);
+                al_flip_display();
+                redraw = false;
+            }
+            continue;
+        }
+
         if (redraw && al_is_event_queue_empty(queue))
         {
             al_clear_to_color(al_map_rgb(0, 0, 0));
@@ -238,6 +296,13 @@ int main()
             al_draw_filled_rectangle(spy.x, spy.y, spy.x + spy.tam_x, spy.y + spy.tam_y, vermelho);
             al_draw_filled_rectangle(guarda.p.x, guarda.p.y, guarda.p.x + guarda.p.tam_x, guarda.p.y + guarda.p.tam_y, azul);
             al_draw_filled_rectangle(guarda.p.x+guarda.p.tam_x*(guarda.p.sentido), guarda.p.y - guarda.cone_h, guarda.p.x + (guarda.p.tam_x + guarda.cone_w)*guarda.p.sentido, guarda.p.y + guarda.cone_h, branco);
+
+            if (tela == TELA_PAUSA) {
+                desenhar_pausa(&pausa, disp_x, disp_y);
+                al_flip_display();
+                redraw = false;
+                continue;
+            }
 
             float y_anterior = spy.y;
 
