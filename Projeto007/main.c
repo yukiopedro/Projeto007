@@ -5,15 +5,102 @@
 #include <allegro5/allegro5.h>
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_primitives.h>
+#include <allegro5/allegro_image.h>
 #include <string.h>
 #include "personagem.h"
-#include "npc.h"
 #include "cenario.h"
 #include "menu.h"
 #include "telas.h"
 #include "mouse.h"
 
 #pragma endregion
+
+typedef struct GRANADA {
+    float x, y, dx, dy;
+    int frame;
+    bool used;
+    bool chao;
+} GRANADA;
+
+#define GRANADA_LARGURA 20.0f
+#define GRANADA_ALTURA 20.0f
+#define GRANADA_GRAVIDADE 1.0f
+#define GRANADA_FADE_TICKS 30
+
+GRANADA granada = { 0 };
+ALLEGRO_BITMAP* imagem_granada = NULL;
+bool jogar_solicitado = false;
+
+void jogar_granada(GRANADA* g, const Personagem* spy)
+{
+    if (g->used)
+        return;
+
+    g->x = spy->x + (spy->tam_x - GRANADA_LARGURA) / 2.0f;
+    g->y = spy->y + spy->tam_y / 2.0f;
+    g->dx = spy->sentido ? 10.0f : -10.0f;
+    g->dy = -18.0f;
+    g->frame = 0;
+    g->used = true;
+    g->chao = false;
+}
+
+void atualizar_granada(GRANADA* g)
+{
+    if (!g->used)
+        return;
+
+    if (g->chao) {
+        if (--g->frame <= 0)
+            g->used = false;
+        return;
+    }
+
+    float y_anterior = g->y;
+
+    g->dy += GRANADA_GRAVIDADE;
+    g->x += g->dx;
+    g->y += g->dy;
+
+    Personagem colisao = { 0 };
+    colisao.x = g->x;
+    colisao.y = g->y;
+    colisao.tam_x = GRANADA_LARGURA;
+    colisao.tam_y = GRANADA_ALTURA;
+    colisao.vel_y = g->dy;
+
+    colisao_plataforma(&colisao, y_anterior);
+
+    if (colisao.grounded) {
+        g->y = colisao.y;
+        g->dy = 0;
+        g->dx = 0;
+        g->chao = true;
+        g->frame = GRANADA_FADE_TICKS;
+    }
+}
+
+void desenhar_granada(const GRANADA* g)
+{
+    if (!g->used || !imagem_granada)
+        return;
+
+    float alpha = g->chao
+        ? (float)g->frame / GRANADA_FADE_TICKS
+        : 1.0f;
+
+    ALLEGRO_COLOR tint = al_map_rgba_f(1.0f, 1.0f, 1.0f, alpha);
+    al_draw_tinted_scaled_bitmap(
+        imagem_granada,
+        tint,
+        0, 0,
+        al_get_bitmap_width(imagem_granada),
+        al_get_bitmap_height(imagem_granada),
+        g->x, g->y,
+        GRANADA_LARGURA, GRANADA_ALTURA,
+        0
+    );
+}
 
 void check(bool test, const char* description)
 {
@@ -23,12 +110,24 @@ void check(bool test, const char* description)
     exit(1);
 }
 
+bool colisao(int ax1, int ay1, int ax2, int ay2, int bx1, int by1, int bx2, int by2) {
+
+    if (ax1 > bx2) return false;
+    if (ax2 < bx1) return false;
+    if (ay1 > by2) return false;
+    if (ay2 < by1) return false;
+
+    return true;
+
+}
+
 
 int main()
 {
     check(al_init(), "allegro");
     check(al_install_keyboard(), "keyboard");
     check(al_install_mouse(), "mouse");
+    check(al_init_image_addon(), "image addon");
 
     ALLEGRO_TIMER* timer = al_create_timer(1.0 / 30.0);
     check(timer, "timer");
@@ -45,6 +144,9 @@ int main()
 
     ALLEGRO_DISPLAY* disp = al_create_display(disp_x, disp_y);
     check(disp, "display");
+
+    imagem_granada = al_load_bitmap("granada.png");
+    check(imagem_granada, "granada.png");
 
     iniciar_cenario(disp_x, disp_y);
 
@@ -83,7 +185,8 @@ int main()
     //Personagem spy = // x, y, tam_x, tam_y, vel_x, vel_y
     Personagem spy = { 200, 200, 20, 20, 0, 0, false};
 
-    NPC guarda = {600, disp_y-30-20, 20, 20, 100, 30, 5, 0, 1};
+    NPC guarda;
+    criar_npc(&guarda, 80, 80, GUARDA);
 
     float gravidade = 10;
 
@@ -118,32 +221,33 @@ int main()
                 int tela_antes = tela;
                 tela = atualizar_telas(tela, &menu, &pausa, key, &mouse, disp_x, &done);
 
-				if (tela_antes == TELA_PAUSA && tela == TELA_MENU) { // reinicia o jogo quando o jogador volta pro menu
+                if (tela_antes == TELA_PAUSA && tela == TELA_MENU) { // reinicia o jogo quando o jogador volta pro menu
                     iniciar_cenario(disp_x, disp_y);
                     spy.x = 200;
                     spy.y = 200;
                     spy.vel_x = 0;
                     spy.vel_y = 0;
                     spy.grounded = false;
-                    guarda.x = 600;
-                    guarda.sentido = 1;
+                    criar_npc(&guarda, 80, 80, GUARDA);
+                    granada.used = false;
                 }
                 redraw = true;
                 break;
             }
-            if ((key[ALLEGRO_KEY_W] || key[ALLEGRO_KEY_SPACE]) && spy.grounded) {
-                spy.grounded = false;
-                spy.vel_y = -50;
-                gravidade = 8;
-            }
-            if (key[ALLEGRO_KEY_A])
-                spy.vel_x = -10;
-            if (key[ALLEGRO_KEY_D])
-                spy.vel_x = 10;
+
+            mover_player(&spy, key);
+
             if (key[ALLEGRO_KEY_E]) {
                 Cenario jogador = { spy.x, spy.y, spy.tam_x, spy.tam_y };
                 coletar_cenario(jogador);
             }
+
+            if (jogar_solicitado) {
+                jogar_granada(&granada, &spy);
+                jogar_solicitado = false;
+            }
+            atualizar_granada(&granada);
+
             if (key[ALLEGRO_KEY_ESCAPE] & KEY_SEEN) {
                 pausa.opcao = 0;
                 tela = TELA_PAUSA;
@@ -155,6 +259,10 @@ int main()
             break;
 
         case ALLEGRO_EVENT_KEY_DOWN:
+            if (event.keyboard.keycode == ALLEGRO_KEY_Q &&
+                !(key[ALLEGRO_KEY_Q] & KEY_DOWN)) {
+                jogar_solicitado = true;
+            }
             key[event.keyboard.keycode] = KEY_SEEN | KEY_DOWN;
             break;
         case ALLEGRO_EVENT_KEY_UP:
@@ -182,11 +290,12 @@ int main()
         {
             al_clear_to_color(al_map_rgb(0, 0, 0));
             desenhar_cenario();
+            desenhar_granada(&granada);
             al_draw_textf(font, branco, disp_x - 10, 5, ALLEGRO_ALIGN_RIGHT, "Documentos coletados: %d", documentos);
             al_draw_textf(font, branco, 0, 0, 0, "X: %.1f Y: %.1f", spy.x, spy.y);
             al_draw_filled_rectangle(spy.x, spy.y, spy.x + spy.tam_x, spy.y + spy.tam_y, vermelho);
-            al_draw_filled_rectangle(guarda.x, guarda.y, guarda.x + guarda.tam_x, guarda.y + guarda.tam_y, azul);
-            al_draw_filled_rectangle(guarda.x+guarda.tam_x*(guarda.sentido==1), guarda.y - guarda.cone_h, guarda.x + (guarda.tam_x + guarda.cone_w)*guarda.sentido, guarda.y + guarda.cone_h, branco);
+            al_draw_filled_rectangle(guarda.p.x, guarda.p.y, guarda.p.x + guarda.p.tam_x, guarda.p.y + guarda.p.tam_y, azul);
+            al_draw_filled_rectangle(guarda.p.x+guarda.p.tam_x*(guarda.p.sentido), guarda.p.y - guarda.cone_h, guarda.p.x + (guarda.p.tam_x + guarda.cone_w)*guarda.p.sentido, guarda.p.y + guarda.cone_h, branco);
 
             if (tela == TELA_PAUSA) {
                 desenhar_pausa(&pausa, disp_x, disp_y);
@@ -212,16 +321,14 @@ int main()
             if (spy.y + spy.tam_y >= disp_y || spy.y <= 0)
                 spy.vel_y *= -1;
 
-            if (guarda.x + guarda.tam_x >= disp_x || guarda.x <= 0) {
-                guarda.sentido *= -1;
+            if (guarda.p.x + guarda.p.tam_x >= disp_x || guarda.p.x <= 0) {
+                guarda.p.sentido *= -1;
             }
 
-            guarda.x += guarda.vel_x * guarda.sentido;
+            guarda.p.x += guarda.p.vel_x * guarda.p.sentido;
 
             if (spy.tam_x + spy.x >= disp_x) {
-
                 spy.x = disp_x - spy.tam_x;
-
             }
 
             if (spy.x < 0) {
@@ -229,6 +336,13 @@ int main()
                 spy.x = 0;
 
             }
+
+            if (granada.x + GRANADA_LARGURA >= disp_x) {
+                granada.x = disp_x - GRANADA_LARGURA;
+            }
+
+            if (granada.x < 0)
+                granada.x = 0;
                 
             al_flip_display();
 
@@ -236,6 +350,7 @@ int main()
         }
     }
 
+    al_destroy_bitmap(imagem_granada);
     al_destroy_font(font);
     al_destroy_display(disp);
     al_destroy_timer(timer);
