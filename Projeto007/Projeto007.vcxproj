@@ -142,10 +142,6 @@
   <ItemGroup>
     <ClCompile Include="cenario.c" />
     <ClCompile Include="main.c" />
-    <ClCompile Include="personagem.c" />
-    <ClCompile Include="menu.c" />
-    <ClCompile Include="mouse.c" />
-    <ClCompile Include="telas.c" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
