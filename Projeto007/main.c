@@ -73,7 +73,7 @@ void atualizar_granada(GRANADA* g)
         g->dy = 0;
         g->dx = 0;
         g->chao = true;
-        g->frame = GRANADA_FADE_TICKS;]
+        g->frame = GRANADA_FADE_TICKS;
     }
 }
 
