@@ -126,13 +126,11 @@ int main()
 {
     check(al_init(), "allegro");
     check(al_install_keyboard(), "keyboard");
-<<<<<<< HEAD
     check(al_init_image_addon(), "image addon");
 
 
-=======
+
     check(al_install_mouse(), "mouse");
->>>>>>> 83861d0 (criação do menu de pausa e interação com o mouse; ajustes e comentários)
 
     ALLEGRO_TIMER* timer = al_create_timer(1.0 / 30.0);
     check(timer, "timer");
@@ -256,19 +254,15 @@ int main()
             if (key[ALLEGRO_KEY_E]) {
                 Cenario jogador = { spy.x, spy.y, spy.tam_x, spy.tam_y };
                 coletar_cenario(jogador);
-<<<<<<< HEAD
             
             atualizar_granada(&granada);
             if (key[ALLEGRO_KEY_ESCAPE])
                 done = true;
-=======
             }
             if (key[ALLEGRO_KEY_ESCAPE] & KEY_SEEN) {
                 pausa.opcao = 0;
                 tela = TELA_PAUSA;
             }
->>>>>>> 83861d0 (criação do menu de pausa e interação com o mouse; ajustes e comentários)
-
             if (key[ALLEGRO_KEY_Q]) {
                 
             }
