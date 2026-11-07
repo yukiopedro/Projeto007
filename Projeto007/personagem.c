@@ -31,10 +31,6 @@ void inputs_player(Personagem* player, char key[]) {
         player->vel_x *= 2;
     if ((key[ALLEGRO_KEY_D] || key[ALLEGRO_KEY_A]) && key[ALLEGRO_KEY_LCTRL])
         player->vel_x *= 0.5;
-    if (key[ALLEGRO_KEY_E]) {
-        Cenario jogador = {player->x, player->y, player->tam_x, player->tam_y };
-        coletar_cenario(jogador);
-    }
 }
 
 void criar_npc(NPC* endereco, float x, float y, int tipo) {

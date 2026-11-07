@@ -12,6 +12,7 @@
 #include "menu.h"
 #include "telas.h"
 #include "mouse.h"
+#include "som.h"
 
 #pragma endregion
 
@@ -153,6 +154,13 @@ int main()
     Menu menu;
     check(iniciar_menu(&menu), "menu");
 
+    Som som;
+    iniciar_som(&som);
+    menu.som = &som;
+
+    Diario diario;
+    check(iniciar_diario(&diario, menu.fonte_titulo), "diario");
+
     Menu pausa;
     iniciar_pausa(&pausa, &menu);
 
@@ -223,27 +231,45 @@ int main()
 
                 if (tela_antes == TELA_PAUSA && tela == TELA_MENU) { // reinicia o jogo quando o jogador volta pro menu
                     iniciar_cenario(disp_x, disp_y);
-                    spy.x = 200;
-                    spy.y = 200;
-                    spy.vel_x = 0;
-                    spy.vel_y = 0;
-                    spy.grounded = false;
+                    criar_player(&spy, 50, 50);
                     criar_npc(&guarda, 80, 80, GUARDA);
                     granada.used = false;
+                    reiniciar_diario(&diario);
                 }
                 redraw = true;
                 break;
             }
 
+            bool estava_no_chao = spy.grounded;
             inputs_player(&spy, key);
+            if (estava_no_chao && !spy.grounded) {
+                tocar_som(&som, SOM_PULAR);
+            }
+
 
             if (key[ALLEGRO_KEY_E]) {
                 Cenario jogador = { spy.x, spy.y, spy.tam_x, spy.tam_y };
-                coletar_cenario(jogador);
+                int documento = coletar_cenario(jogador);
+
+                if (documento != -1) {
+                    coletar_documento(&diario, documento);
+                    tocar_som(&som, SOM_COLETA);
+                }
+            }
+
+            atualizar_aviso(&diario);
+
+            if (key[ALLEGRO_KEY_P] & KEY_SEEN) {
+                tocar_som(&som, SOM_DIARIO);
+                tela = TELA_DIARIO;
             }
 
             if (jogar_solicitado) {
+                bool tinha_granada = granada.used;
                 jogar_granada(&granada, &spy);
+                if (!tinha_granada && granada.used) {
+                    tocar_som(&som, SOM_GRANADA);
+                }
                 jogar_solicitado = false;
             }
             atualizar_granada(&granada);
@@ -279,7 +305,7 @@ int main()
 
         if (tela != TELA_JOGO && tela != TELA_PAUSA) {
             if (redraw && al_is_event_queue_empty(queue)) {
-                desenhar_telas(tela, &menu, &pausa, &instrucoes, &creditos, disp_x);
+                desenhar_telas(tela, &menu, &pausa, &instrucoes, &creditos, &diario, disp_x);
                 al_flip_display();
                 redraw = false;
             }
@@ -291,13 +317,13 @@ int main()
             al_clear_to_color(al_map_rgb(0, 0, 0));
             desenhar_cenario();
             desenhar_granada(&granada);
-            al_draw_textf(font, branco, disp_x - 10, 5, ALLEGRO_ALIGN_RIGHT, "Documentos coletados: %d", documentos);
-            al_draw_textf(font, branco, disp_x - 10, 15, ALLEGRO_ALIGN_RIGHT, "Vivo: %d", spy.vivo);
+            al_draw_textf(font, branco, disp_x - 10, 5, ALLEGRO_ALIGN_RIGHT, "Vivo: %d", spy.vivo);
             al_draw_textf(font, branco, 0, 0, 0, "X: %.1f Y: %.1f", spy.x, spy.y);
             al_draw_filled_rectangle(spy.x, spy.y, spy.x + spy.tam_x, spy.y + spy.tam_y, vermelho);
             al_draw_filled_rectangle(guarda.p.x, guarda.p.y, guarda.p.x + guarda.p.tam_x, guarda.p.y + guarda.p.tam_y, azul);
             al_draw_filled_rectangle(guarda.cone_x, guarda.cone_y, guarda.cone_x + guarda.cone_w, guarda.cone_y + guarda.cone_h, branco);
-
+            desenhar_aviso(&diario, disp_x);
+            
             if (tela == TELA_PAUSA) {
                 desenhar_pausa(&pausa, disp_x, disp_y);
                 al_flip_display();

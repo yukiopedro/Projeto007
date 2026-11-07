@@ -11,8 +11,6 @@ int n_plataformas = 0;
 
 Cenario coletavel;
 bool coletado = false;
-int documentos = 0;
-
 
 void add_plataforma(float x, float y, float w, float h) {
     if (n_plataformas >= MAX_PLATAFORMAS)
@@ -41,7 +39,6 @@ bool se_tocam(Cenario a, Cenario b) {
 void iniciar_cenario(float largura, float altura) {
     n_plataformas = 0;
     coletado = false;
-    documentos = 0;
 
     float topo_chao = altura - ALTURA_CHAO;
     float altura_apoio = 130;
@@ -62,23 +59,24 @@ void iniciar_cenario(float largura, float altura) {
     coletavel.y = topo_chao - coletavel.h;
 }
 
-bool colisao_cenario(Cenario r) {             // retorna true se o personagem bate em alguma plataforma (chão, teto e paredes)
+bool colisao_cenario(Cenario r) { // retorna true se o personagem bate em alguma plataforma (chão, teto e paredes)
     for (int i = 0; i < n_plataformas; i++)
         if (se_tocam(r, plataformas[i]))
             return true;
     return false;
 }
 
-void coletar_cenario(Cenario jogador) {
+int coletar_cenario(Cenario jogador) {
     if (coletado)
-        return;
+        return -1;
 
     Cenario alcance = { jogador.x - ALCANCE_COLETA, jogador.y - ALCANCE_COLETA, jogador.w + 2 * ALCANCE_COLETA, jogador.h + 2 * ALCANCE_COLETA };
 
     if (se_tocam(alcance, coletavel)) {
         coletado = true;
-        documentos++;
+        return 0;
     }
+    return -1;
 }
 
 void desenhar_cenario(void) {

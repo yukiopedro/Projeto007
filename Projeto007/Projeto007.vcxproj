@@ -144,6 +144,7 @@
     <ClCompile Include="main.c" />
     <ClCompile Include="menu.c" />
     <ClCompile Include="mouse.c" />
+    <ClCompile Include="som.c" />
     <ClCompile Include="telas.c" />
     <ClCompile Include="personagem.c" />
   </ItemGroup>
@@ -155,6 +156,7 @@
     <ClInclude Include="menu.h" />
     <ClInclude Include="mouse.h" />
     <ClInclude Include="personagem.h" />
+    <ClInclude Include="som.h" />
     <ClInclude Include="telas.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

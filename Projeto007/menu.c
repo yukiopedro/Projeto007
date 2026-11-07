@@ -21,6 +21,7 @@ bool iniciar_menu(Menu* menu) { // carrega as fontes e preenche o menu principal
     }
 
     menu->opcao = 0;
+    menu->som = NULL;
     menu->total = TOTAL_OPCOES;
     menu->y_inicial = 330;
     menu->espaco = 60;
@@ -42,6 +43,7 @@ void mover_opcao(Menu* menu, unsigned char* key) { // muda o botão escolhido co
         if (menu->opcao < 0) {
             menu->opcao = menu->total - 1;
         }
+        tocar_som(menu->som, SOM_MOVER);
     }
     if (key[ALLEGRO_KEY_DOWN] & MENU_KEY_SEEN) {
         menu->opcao++;
@@ -49,6 +51,7 @@ void mover_opcao(Menu* menu, unsigned char* key) { // muda o botão escolhido co
         if (menu->opcao >= menu->total) {
             menu->opcao = 0;
         }
+        tocar_som(menu->som, SOM_MOVER);
     }
 }
 
@@ -70,15 +73,20 @@ bool escolher_opcao(Menu* menu, unsigned char* key, Mouse* mouse, float disp_x) 
     int sob = botao_sob_mouse(menu, mouse, disp_x);
     if (sob != -1) {
         if (mouse->mexeu) { // só muda o botão quando o mouse se mexe pra não conflitar com as setas
+            if (menu->opcao != sob) {
+                tocar_som(menu->som, SOM_MOVER);
+            }
             menu->opcao = sob;
         }
         if (mouse->clicou) {
             menu->opcao = sob;
+            tocar_som(menu->som, SOM_CONFIRMAR);
             return true;
         }
     }
 
     if (key[ALLEGRO_KEY_ENTER] & MENU_KEY_SEEN) {
+        tocar_som(menu->som, SOM_CONFIRMAR);
         return true;
     }
     return false;
@@ -125,6 +133,7 @@ void desenhar_menu(Menu* menu, float disp_x) { // desenha o título e os botões
 void iniciar_pausa(Menu* pausa, Menu* menu) { // monta o menu de pausa
     pausa->fonte_titulo = menu->fonte_titulo;
     pausa->fonte_botao = menu->fonte_botao;
+    pausa->som = menu->som;
 
     pausa->titulo_cima = "";
     pausa->titulo_baixo = "PAUSADO";
