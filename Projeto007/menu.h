@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <allegro5/allegro_font.h>
 #include "mouse.h"
+#include "som.h"
 
 #define TOTAL_OPCOES 5
 #define MENU_KEY_SEEN 1
@@ -26,6 +27,7 @@ typedef struct Menu {
     const char* nomes[TOTAL_OPCOES];
     ALLEGRO_FONT* fonte_titulo;
     ALLEGRO_FONT* fonte_botao;
+    Som* som;
 } Menu;
 
 bool iniciar_menu(Menu* menu);
