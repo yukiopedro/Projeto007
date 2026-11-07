@@ -182,8 +182,8 @@ int main()
 
     ALLEGRO_EVENT event;
 
-    //Personagem spy = // x, y, tam_x, tam_y, vel_x, vel_y
-    Personagem spy = { 200, 200, 20, 20, 0, 0, false};
+    Personagem spy;
+    criar_player(&spy, 50, 50);
 
     NPC guarda;
     criar_npc(&guarda, 80, 80, GUARDA);
@@ -235,7 +235,7 @@ int main()
                 break;
             }
 
-            mover_player(&spy, key);
+            inputs_player(&spy, key);
 
             if (key[ALLEGRO_KEY_E]) {
                 Cenario jogador = { spy.x, spy.y, spy.tam_x, spy.tam_y };
@@ -292,10 +292,11 @@ int main()
             desenhar_cenario();
             desenhar_granada(&granada);
             al_draw_textf(font, branco, disp_x - 10, 5, ALLEGRO_ALIGN_RIGHT, "Documentos coletados: %d", documentos);
+            al_draw_textf(font, branco, disp_x - 10, 15, ALLEGRO_ALIGN_RIGHT, "Vivo: %d", spy.vivo);
             al_draw_textf(font, branco, 0, 0, 0, "X: %.1f Y: %.1f", spy.x, spy.y);
             al_draw_filled_rectangle(spy.x, spy.y, spy.x + spy.tam_x, spy.y + spy.tam_y, vermelho);
             al_draw_filled_rectangle(guarda.p.x, guarda.p.y, guarda.p.x + guarda.p.tam_x, guarda.p.y + guarda.p.tam_y, azul);
-            al_draw_filled_rectangle(guarda.p.x+guarda.p.tam_x*(guarda.p.sentido), guarda.p.y - guarda.cone_h, guarda.p.x + (guarda.p.tam_x + guarda.cone_w)*guarda.p.sentido, guarda.p.y + guarda.cone_h, branco);
+            al_draw_filled_rectangle(guarda.cone_x, guarda.cone_y, guarda.cone_x + guarda.cone_w, guarda.cone_y + guarda.cone_h, branco);
 
             if (tela == TELA_PAUSA) {
                 desenhar_pausa(&pausa, disp_x, disp_y);
@@ -309,9 +310,6 @@ int main()
             spy.x += spy.vel_x;
             spy.y += spy.vel_y;
 
-            if (spy.vel_y < 30) 
-                spy.vel_y += gravidade;
-
             colisao_plataforma(&spy, y_anterior);
 
             if (spy.grounded) {
@@ -321,21 +319,17 @@ int main()
             if (spy.y + spy.tam_y >= disp_y || spy.y <= 0)
                 spy.vel_y *= -1;
 
-            if (guarda.p.x + guarda.p.tam_x >= disp_x || guarda.p.x <= 0) {
-                guarda.p.sentido *= -1;
-            }
-
-            guarda.p.x += guarda.p.vel_x * guarda.p.sentido;
-
             if (spy.tam_x + spy.x >= disp_x) {
                 spy.x = disp_x - spy.tam_x;
             }
 
             if (spy.x < 0) {
-
                 spy.x = 0;
-
             }
+
+            colisao_plataforma(&guarda.p, guarda.p.y - guarda.p.vel_y);
+            mover_NPC(&guarda);
+            colisao_lanterna(&spy, &guarda);
 
             if (granada.x + GRANADA_LARGURA >= disp_x) {
                 granada.x = disp_x - GRANADA_LARGURA;
