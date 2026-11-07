@@ -231,11 +231,7 @@ int main()
 
                 if (tela_antes == TELA_PAUSA && tela == TELA_MENU) { // reinicia o jogo quando o jogador volta pro menu
                     iniciar_cenario(disp_x, disp_y);
-                    spy.x = 200;
-                    spy.y = 200;
-                    spy.vel_x = 0;
-                    spy.vel_y = 0;
-                    spy.grounded = false;
+                    criar_player(&spy, 50, 50);
                     criar_npc(&guarda, 80, 80, GUARDA);
                     granada.used = false;
                     reiniciar_diario(&diario);
