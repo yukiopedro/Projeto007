@@ -188,7 +188,7 @@ void desenhar_diario(Diario* diario, float disp_x) { // desenha o contexto e os 
     al_draw_text(diario->fonte, branco, disp_x / 2, 670, ALLEGRO_ALIGN_CENTER, "ESC PARA FECHAR");
 }
 
-int atualizar_telas(int tela, Menu* menu, Menu* pausa, unsigned char* key, Mouse* mouse, float disp_x, bool* done) { // trata a tela atual e retorna a tela para onde o jogo vai
+int atualizar_telas(int tela, Menu* menu, Menu* pausa, Menu* gameover, unsigned char* key, Mouse* mouse, float disp_x, bool* done) { // trata a tela atual e retorna a tela para onde o jogo vai
     if (tela == TELA_MENU) {
         int acao = atualizar_menu(menu, key, mouse, disp_x);
 
@@ -216,6 +216,16 @@ int atualizar_telas(int tela, Menu* menu, Menu* pausa, unsigned char* key, Mouse
         }
         if (acao == ACAO_SAIR) {
             *done = true;
+        }
+    }
+    else if (tela == TELA_GAMEOVER) {
+        int acao = atualizar_gameover(gameover, key, mouse, disp_x);
+
+        if (acao == ACAO_TENTAR_NOVAMENTE) {
+            tela = TELA_JOGO;
+        }
+        if (acao == ACAO_VOLTAR_MENU) {
+            tela = TELA_MENU;
         }
     }
     else if (tela == TELA_DIARIO) {

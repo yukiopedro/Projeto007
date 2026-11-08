@@ -193,3 +193,60 @@ void desenhar_pausa(Menu* pausa, float disp_x, float disp_y) { // desenha o quad
         al_draw_text(pausa->fonte_botao, cor, disp_x / 2, y, ALLEGRO_ALIGN_CENTER, pausa->nomes[i]);
     }
 }
+
+void iniciar_gameover(Menu* gameover, Menu* menu) { // monta o menu da tela de game over
+    gameover->fonte_titulo = menu->fonte_titulo;
+    gameover->fonte_botao = menu->fonte_botao;
+    gameover->som = menu->som;
+
+    gameover->titulo_cima = "";
+    gameover->titulo_baixo = "GAME OVER";
+
+    gameover->opcao = 0;
+    gameover->total = 2;
+    gameover->y_inicial = 400;
+    gameover->espaco = 70;
+    gameover->nomes[0] = "TENTAR NOVAMENTE";
+    gameover->nomes[1] = "VOLTAR AO MENU";
+}
+
+int atualizar_gameover(Menu* gameover, unsigned char* key, Mouse* mouse, float disp_x) { // confere o que o jogador escolheu no game over
+    if (escolher_opcao(gameover, key, mouse, disp_x)) {
+        if (gameover->opcao == 0) {
+            return ACAO_TENTAR_NOVAMENTE;
+        }
+        if (gameover->opcao == 1) {
+            return ACAO_VOLTAR_MENU;
+        }
+    }
+    return ACAO_NENHUMA;
+}
+
+void desenhar_gameover(Menu* gameover, float disp_x, float disp_y) { // desenha o quadrado do game over, a mensagem e os botões
+    ALLEGRO_COLOR branco = al_map_rgb(255, 255, 255);
+    ALLEGRO_COLOR vermelho = al_map_rgb(255, 0, 0);
+    ALLEGRO_COLOR preto = al_map_rgb(0, 0, 0);
+
+    float x1 = disp_x / 2 - 440;
+    float x2 = disp_x / 2 + 440;
+    float y1 = 80;
+    float y2 = 640;
+
+    al_draw_filled_rectangle(x1, y1, x2, y2, preto);
+    al_draw_rectangle(x1, y1, x2, y2, branco, 4);
+
+    al_draw_text(gameover->fonte_titulo, vermelho, disp_x / 2, y1 + 50, ALLEGRO_ALIGN_CENTER, gameover->titulo_baixo);
+
+    al_draw_text(gameover->fonte_botao, branco, disp_x / 2, 250, ALLEGRO_ALIGN_CENTER, "VOCÊ FOI DETECTADO.");
+    al_draw_text(gameover->fonte_botao, branco, disp_x / 2, 290, ALLEGRO_ALIGN_CENTER, "SUA ESPIONAGEM FALHOU.");
+
+    for (int i = 0; i < gameover->total; i++) {
+        float y = gameover->y_inicial + i * gameover->espaco;
+        ALLEGRO_COLOR cor = branco;
+
+        if (i == gameover->opcao) {
+            cor = vermelho;
+        }
+        al_draw_text(gameover->fonte_botao, cor, disp_x / 2, y, ALLEGRO_ALIGN_CENTER, gameover->nomes[i]);
+    }
+}

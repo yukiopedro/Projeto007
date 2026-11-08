@@ -122,6 +122,13 @@ bool colisao(int ax1, int ay1, int ax2, int ay2, int bx1, int by1, int bx2, int 
 
 }
 
+void reiniciar_jogo(Personagem* spy, NPC* guarda, Diario* diario, float disp_x, float disp_y) { // reinicia o jogo
+    iniciar_cenario(disp_x, disp_y);
+    criar_player(spy, 50, 50);
+    criar_npc(guarda, 80, 80, GUARDA);
+    granada.used = false;
+    reiniciar_diario(diario);
+}
 
 int main()
 {
@@ -163,6 +170,9 @@ int main()
 
     Menu pausa;
     iniciar_pausa(&pausa, &menu);
+
+    Menu gameover;
+    iniciar_gameover(&gameover, &menu);
 
     Mouse mouse;
     iniciar_mouse(&mouse);
@@ -227,14 +237,10 @@ int main()
         case ALLEGRO_EVENT_TIMER:
             if (tela != TELA_JOGO) {
                 int tela_antes = tela;
-                tela = atualizar_telas(tela, &menu, &pausa, key, &mouse, disp_x, &done);
+                tela = atualizar_telas(tela, &menu, &pausa, &gameover, key, &mouse, disp_x, &done);
 
-                if (tela_antes == TELA_PAUSA && tela == TELA_MENU) { // reinicia o jogo quando o jogador volta pro menu
-                    iniciar_cenario(disp_x, disp_y);
-                    criar_player(&spy, 50, 50);
-                    criar_npc(&guarda, 80, 80, GUARDA);
-                    granada.used = false;
-                    reiniciar_diario(&diario);
+                if ((tela_antes == TELA_PAUSA && tela == TELA_MENU) || (tela_antes == TELA_GAMEOVER && tela != TELA_GAMEOVER)) {
+                    reiniciar_jogo(&spy, &guarda, &diario, disp_x, disp_y);
                 }
                 redraw = true;
                 break;
@@ -303,7 +309,7 @@ int main()
         if (done)
             break;
 
-        if (tela != TELA_JOGO && tela != TELA_PAUSA) {
+        if (tela != TELA_JOGO && tela != TELA_PAUSA && tela != TELA_GAMEOVER) {
             if (redraw && al_is_event_queue_empty(queue)) {
                 desenhar_telas(tela, &menu, &pausa, &instrucoes, &creditos, &diario, disp_x);
                 al_flip_display();
@@ -326,6 +332,13 @@ int main()
             
             if (tela == TELA_PAUSA) {
                 desenhar_pausa(&pausa, disp_x, disp_y);
+                al_flip_display();
+                redraw = false;
+                continue;
+            }
+
+            if (tela == TELA_GAMEOVER) {
+                desenhar_gameover(&gameover, disp_x, disp_y);
                 al_flip_display();
                 redraw = false;
                 continue;
@@ -356,6 +369,12 @@ int main()
             colisao_plataforma(&guarda.p, guarda.p.y - guarda.p.vel_y);
             mover_NPC(&guarda);
             colisao_lanterna(&spy, &guarda);
+
+            if (!spy.vivo) {
+                tocar_som(&som, SOM_GAMEOVER);
+                gameover.opcao = 0;
+                tela = TELA_GAMEOVER;
+            }
 
             if (granada.x + GRANADA_LARGURA >= disp_x) {
                 granada.x = disp_x - GRANADA_LARGURA;

@@ -71,7 +71,6 @@ void colisao_lanterna(Personagem* player, NPC* inimigo) {
     if (player->y + player->tam_y <= inimigo->p.y) return; // borda superior
     if (player->y >= inimigo->p.y + inimigo->p.tam_y) return; // borda inferior
     player->vivo = false;
-    printf("Morreu\n");
     
 }
 

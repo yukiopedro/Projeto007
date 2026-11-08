@@ -13,6 +13,7 @@
 #define TELA_PAUSA 4
 #define TELA_OPCOES 5
 #define TELA_DIARIO 6
+#define TELA_GAMEOVER 7
 
 #ifndef KEY_SEEN
 #define KEY_SEEN 1
@@ -54,7 +55,7 @@ void atualizar_aviso(Diario* diario);
 void desenhar_aviso(Diario* diario, float disp_x);
 void desenhar_diario(Diario* diario, float disp_x);
 
-int atualizar_telas(int tela, Menu* menu, Menu* pausa, unsigned char* key, Mouse* mouse, float disp_x, bool* done);
+int atualizar_telas(int tela, Menu* menu, Menu* pausa, Menu* gameover, unsigned char* key, Mouse* mouse, float disp_x, bool* done);
 void iniciar_tela_texto(TelaTexto* tela, const char* titulo);
 void add_linha(TelaTexto* tela, const char* esquerda, const char* direita);
 void iniciar_instrucoes(TelaTexto* tela);
