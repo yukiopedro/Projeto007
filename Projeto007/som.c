@@ -9,6 +9,7 @@ bool iniciar_som(Som* som) { // liga o áudio e carrega todos os efeitos da list
         "assets/jogar_granada.wav",
         "assets/diario.wav",
         "assets/coletar.wav",
+        "assets/gameover.wav",
     };
 
     som->volume = 0.3f;
