@@ -13,6 +13,7 @@
 #include "telas.h"
 #include "mouse.h"
 #include "som.h"
+#include "pontuacao.h"
 
 #pragma endregion
 
@@ -122,12 +123,13 @@ bool colisao(int ax1, int ay1, int ax2, int ay2, int bx1, int by1, int bx2, int 
 
 }
 
-void reiniciar_jogo(Personagem* spy, NPC* guarda, Diario* diario, float disp_x, float disp_y) { // reinicia o jogo
+void reiniciar_jogo(Personagem* spy, NPC* guarda, Diario* diario, Partida* partida, float disp_x, float disp_y) { // reinicia o jogo
     iniciar_cenario(disp_x, disp_y);
     criar_player(spy, 50, 50);
     criar_npc(guarda, 80, 80, GUARDA);
     granada.used = false;
     reiniciar_diario(diario);
+    reiniciar_partida(partida);
 }
 
 int main()
@@ -173,6 +175,8 @@ int main()
 
     Menu gameover;
     iniciar_gameover(&gameover, &menu);
+
+    Partida partida = { 0 };
 
     Mouse mouse;
     iniciar_mouse(&mouse);
@@ -240,18 +244,19 @@ int main()
                 tela = atualizar_telas(tela, &menu, &pausa, &gameover, key, &mouse, disp_x, &done);
 
                 if ((tela_antes == TELA_PAUSA && tela == TELA_MENU) || (tela_antes == TELA_GAMEOVER && tela != TELA_GAMEOVER)) {
-                    reiniciar_jogo(&spy, &guarda, &diario, disp_x, disp_y);
+                    reiniciar_jogo(&spy, &guarda, &diario, &partida, disp_x, disp_y);
                 }
                 redraw = true;
                 break;
             }
 
+            partida.frames++;
             bool estava_no_chao = spy.grounded;
             inputs_player(&spy, key);
+
             if (estava_no_chao && !spy.grounded) {
                 tocar_som(&som, SOM_PULAR);
             }
-
 
             if (key[ALLEGRO_KEY_E]) {
                 Cenario jogador = { spy.x, spy.y, spy.tam_x, spy.tam_y };
@@ -259,6 +264,7 @@ int main()
 
                 if (documento != -1) {
                     coletar_documento(&diario, documento);
+                    partida.documentos++;
                     tocar_som(&som, SOM_COLETA);
                 }
             }
@@ -328,6 +334,8 @@ int main()
             al_draw_filled_rectangle(spy.x, spy.y, spy.x + spy.tam_x, spy.y + spy.tam_y, vermelho);
             al_draw_filled_rectangle(guarda.p.x, guarda.p.y, guarda.p.x + guarda.p.tam_x, guarda.p.y + guarda.p.tam_y, azul);
             al_draw_filled_rectangle(guarda.cone_x, guarda.cone_y, guarda.cone_x + guarda.cone_w, guarda.cone_y + guarda.cone_h, branco);
+            int segundos = partida.frames / 30;
+            al_draw_textf(menu.fonte_botao, branco, disp_x / 2, 10, ALLEGRO_ALIGN_CENTER, "%02d:%02d", segundos / 60, segundos % 60);
             desenhar_aviso(&diario, disp_x);
             
             if (tela == TELA_PAUSA) {
@@ -338,7 +346,7 @@ int main()
             }
 
             if (tela == TELA_GAMEOVER) {
-                desenhar_gameover(&gameover, disp_x, disp_y);
+                desenhar_gameover(&gameover, &partida, disp_x, disp_y);
                 al_flip_display();
                 redraw = false;
                 continue;
@@ -371,6 +379,7 @@ int main()
             colisao_lanterna(&spy, &guarda);
 
             if (!spy.vivo) {
+                calcular_pontuacao(&partida);
                 tocar_som(&som, SOM_GAMEOVER);
                 gameover.opcao = 0;
                 tela = TELA_GAMEOVER;

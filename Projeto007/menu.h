@@ -5,6 +5,7 @@
 #include <allegro5/allegro_font.h>
 #include "mouse.h"
 #include "som.h"
+#include "pontuacao.h"
 
 #define TOTAL_OPCOES 5
 #define MENU_KEY_SEEN 1
@@ -42,6 +43,6 @@ void mover_opcao(Menu* menu, unsigned char* key);
 void iniciar_pausa(Menu* pausa, Menu* menu);
 void desenhar_pausa(Menu* pausa, float disp_x, float disp_y);
 void iniciar_gameover(Menu* gameover, Menu* menu);
-void desenhar_gameover(Menu* gameover, float disp_x, float disp_y);
+void desenhar_gameover(Menu* gameover, Partida* partida, float disp_x, float disp_y);
 
 #endif // !menu
