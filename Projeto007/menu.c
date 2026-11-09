@@ -204,7 +204,7 @@ void iniciar_gameover(Menu* gameover, Menu* menu) { // monta o menu da tela de g
 
     gameover->opcao = 0;
     gameover->total = 2;
-    gameover->y_inicial = 400;
+    gameover->y_inicial = 460;
     gameover->espaco = 70;
     gameover->nomes[0] = "TENTAR NOVAMENTE";
     gameover->nomes[1] = "VOLTAR AO MENU";
@@ -222,7 +222,7 @@ int atualizar_gameover(Menu* gameover, unsigned char* key, Mouse* mouse, float d
     return ACAO_NENHUMA;
 }
 
-void desenhar_gameover(Menu* gameover, float disp_x, float disp_y) { // desenha o quadrado do game over, a mensagem e os botões
+void desenhar_gameover(Menu* gameover, Partida* partida, float disp_x, float disp_y) { // desenha o quadrado do game over, a mensagem e os botões
     ALLEGRO_COLOR branco = al_map_rgb(255, 255, 255);
     ALLEGRO_COLOR vermelho = al_map_rgb(255, 0, 0);
     ALLEGRO_COLOR preto = al_map_rgb(0, 0, 0);
@@ -237,8 +237,12 @@ void desenhar_gameover(Menu* gameover, float disp_x, float disp_y) { // desenha 
 
     al_draw_text(gameover->fonte_titulo, vermelho, disp_x / 2, y1 + 50, ALLEGRO_ALIGN_CENTER, gameover->titulo_baixo);
 
-    al_draw_text(gameover->fonte_botao, branco, disp_x / 2, 250, ALLEGRO_ALIGN_CENTER, "VOCÊ FOI DETECTADO.");
-    al_draw_text(gameover->fonte_botao, branco, disp_x / 2, 290, ALLEGRO_ALIGN_CENTER, "SUA ESPIONAGEM FALHOU.");
+    al_draw_text(gameover->fonte_botao, branco, disp_x / 2, 230, ALLEGRO_ALIGN_CENTER, "VOCÊ FOI DETECTADO.");
+    al_draw_text(gameover->fonte_botao, branco, disp_x / 2, 265, ALLEGRO_ALIGN_CENTER, "SUA ESPIONAGEM FALHOU.");
+
+    int segundos = partida->frames / 30;
+    al_draw_textf(gameover->fonte_botao, branco, disp_x / 2, 325, ALLEGRO_ALIGN_CENTER, "TEMPO: %02d:%02d", segundos / 60, segundos % 60);
+    al_draw_textf(gameover->fonte_botao, branco, disp_x / 2, 365, ALLEGRO_ALIGN_CENTER, "PONTUAÇÃO: %d", partida->pontuacao);
 
     for (int i = 0; i < gameover->total; i++) {
         float y = gameover->y_inicial + i * gameover->espaco;
