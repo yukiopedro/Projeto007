@@ -145,6 +145,7 @@
     <ClCompile Include="menu.c" />
     <ClCompile Include="mouse.c" />
     <ClCompile Include="pontuacao.c" />
+    <ClCompile Include="relatorio.c" />
     <ClCompile Include="som.c" />
     <ClCompile Include="telas.c" />
     <ClCompile Include="personagem.c" />
@@ -156,6 +157,7 @@
     <ClInclude Include="cenario.h" />
     <ClInclude Include="menu.h" />
     <ClInclude Include="mouse.h" />
+    <ClInclude Include="relatorio.h" />
     <ClInclude Include="personagem.h" />
     <ClInclude Include="pontuacao.h" />
     <ClInclude Include="som.h" />

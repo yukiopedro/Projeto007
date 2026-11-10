@@ -5,12 +5,13 @@
 #include <allegro5/allegro_primitives.h>
 #include "cenario.h"
 #include "personagem.h"
+#include "pontuacao.h"
 
 Cenario plataformas[MAX_PLATAFORMAS];
 int n_plataformas = 0;
 
-Cenario coletavel;
-bool coletado = false;
+Cenario coletaveis[TOTAL_DOCUMENTOS_FASE];
+bool coletados[TOTAL_DOCUMENTOS_FASE];
 
 void add_plataforma(float x, float y, float w, float h) {
     if (n_plataformas >= MAX_PLATAFORMAS)
@@ -38,7 +39,6 @@ bool se_tocam(Cenario a, Cenario b) {
 
 void iniciar_cenario(float largura, float altura) {
     n_plataformas = 0;
-    coletado = false;
 
     float topo_chao = altura - ALTURA_CHAO;
     float altura_apoio = 130;
@@ -48,15 +48,23 @@ void iniciar_cenario(float largura, float altura) {
     add_plataforma(0, -20, largura, 20);
     add_plataforma(-20, 0, 20, altura);
     add_plataforma(largura, 0, 20, altura);
-
     add_plataforma(320, topo_chao - altura_apoio, 140, 12);
-
     add_plataforma(512, topo_chao - altura_grande, 400, 12);
 
-    coletavel.w = 14;
-    coletavel.h = 18;
-    coletavel.x = largura - 80;
-    coletavel.y = topo_chao - coletavel.h;
+    for (int i = 0; i < TOTAL_DOCUMENTOS_FASE; i++) {
+        coletaveis[i].w = 14;
+        coletaveis[i].h = 18;
+        coletados[i] = false;
+    }
+
+    coletaveis[0].x = largura - 80;
+    coletaveis[0].y = topo_chao - coletaveis[0].h;
+
+    coletaveis[1].x = 820;
+    coletaveis[1].y = topo_chao - altura_grande - coletaveis[1].h;
+
+    coletaveis[2].x = 380;
+    coletaveis[2].y = topo_chao - altura_apoio - coletaveis[2].h;
 }
 
 bool colisao_cenario(Cenario r) { // retorna true se o personagem bate em alguma plataforma (chão, teto e paredes)
@@ -66,15 +74,14 @@ bool colisao_cenario(Cenario r) { // retorna true se o personagem bate em alguma
     return false;
 }
 
-int coletar_cenario(Cenario jogador) {
-    if (coletado)
-        return -1;
-
+int coletar_cenario(Cenario jogador) { // retorna o número do documento coletado
     Cenario alcance = { jogador.x - ALCANCE_COLETA, jogador.y - ALCANCE_COLETA, jogador.w + 2 * ALCANCE_COLETA, jogador.h + 2 * ALCANCE_COLETA };
 
-    if (se_tocam(alcance, coletavel)) {
-        coletado = true;
-        return 0;
+    for (int i = 0; i < TOTAL_DOCUMENTOS_FASE; i++) {
+        if (!coletados[i] && se_tocam(alcance, coletaveis[i])) {
+            coletados[i] = true;
+            return i;
+        }
     }
     return -1;
 }
@@ -89,8 +96,10 @@ void desenhar_cenario(void) {
         al_draw_rectangle(plataformas[i].x, plataformas[i].y, plataformas[i].x + plataformas[i].w, plataformas[i].y + plataformas[i].h, cor_borda, 1.0f);
     }
 
-    if (!coletado) {
-        al_draw_filled_rectangle(coletavel.x, coletavel.y, coletavel.x + coletavel.w, coletavel.y + coletavel.h, cor_papel);
+    for (int i = 0; i < TOTAL_DOCUMENTOS_FASE; i++) {
+        if (!coletados[i]) {
+            al_draw_filled_rectangle(coletaveis[i].x, coletaveis[i].y, coletaveis[i].x + coletaveis[i].w, coletaveis[i].y + coletaveis[i].h, cor_papel);
+        }
     }
 }
 

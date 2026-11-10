@@ -7,8 +7,6 @@
 #define ALCANCE_COLETA  20.0f
 #define ALTURA_CHAO 30
 
-extern bool coletado;
-
 typedef struct Cenario {
     float x;
     float y;
