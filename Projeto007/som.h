@@ -14,7 +14,8 @@
 #define SOM_DIARIO 4
 #define SOM_COLETA 5
 #define SOM_GAMEOVER 6
-#define TOTAL_SONS 7
+#define SOM_CONCLUSAO 7
+#define TOTAL_SONS 8
 
 typedef struct Som {
     ALLEGRO_SAMPLE* efeitos[TOTAL_SONS];

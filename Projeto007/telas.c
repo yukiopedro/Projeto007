@@ -26,6 +26,7 @@ void iniciar_instrucoes(TelaTexto* tela) { // preenche a tela de controles
     add_linha(tela, "SHIFT", "CORRER");
     add_linha(tela, "CTRL", "ANDAR DEVAGAR");
     add_linha(tela, "E", "INTERAGIR");
+    add_linha(tela, "Q", "JOGAR GRANADA");
     add_linha(tela, "P", "ABRIR DIÁRIO");
     add_linha(tela, "ESC", "PAUSAR");
 }
@@ -75,16 +76,16 @@ bool iniciar_diario(Diario* diario, ALLEGRO_FONT* fonte_titulo) { // escreve os 
     diario->fonte = al_load_ttf_font("assets/PressStart2P-Regular.ttf", 16, 0);
     diario->fonte_aviso = al_load_ttf_font("assets/PressStart2P-Regular.ttf", AVISO_FONTE, 0);
 
-    diario->contexto = "Escrever um contexto da fase aq";
+    diario->contexto = "Estamos em plena Guerra Fria e um pequeno satélite soviético acaba de cruzar o céu dos EUA. Infiltrado na CIA, preciso encontrar os documentos que mostram o medo e os planos de Washington. Se me descobrirem, a missão e a minha vida acabam aqui.";
 
-    diario->titulo[0] = "DOCUMENTO 1";
-    diario->texto[0] = "Escrever texto do documento aq";
+    diario->titulo[0] = "OUT 1957 - O FOGUETE R-7";
+    diario->texto[0] = "O Sputnik foi lançado por um foguete R-7, que também pode levar uma bomba nuclear até os EUA. O satélite é um aviso ao mundo.";
 
-    diario->titulo[1] = "DOCUMENTO 2";
-    diario->texto[1] = "Escrever texto do documento aq";
+    diario->titulo[1] = "04/10/1957 - SPUTNIK 1";
+    diario->texto[1] = "A URSS lançou o primeiro satélite artificial da história. O bipe do Sputnik pode ser ouvido por rádio no mundo todo. Os americanos estão em choque.";
 
-    diario->titulo[2] = "DOCUMENTO 3";
-    diario->texto[2] = "Escrever texto do documento aq";
+    diario->titulo[2] = "06/12/1957 - FALHA DO VANGUARD";
+    diario->texto[2] = "O foguete americano Vanguard explodiu logo após decolar, diante das câmeras. Os jornais falam em fracasso. Os EUA correm para tentar de novo.";
 
     reiniciar_diario(diario);
     return true;
@@ -171,7 +172,7 @@ void desenhar_diario(Diario* diario, float disp_x) { // desenha o contexto e os 
     al_draw_text(diario->fonte, vermelho, 140, 150, 0, "CONTEXTO");
     al_draw_multiline_text(diario->fonte, branco, 140, 180, 1000, 0, 0, diario->contexto);
 
-    al_draw_textf(diario->fonte, vermelho, 140, 330, 0, "DOCUMENTOS %d/%d", total, TOTAL_DOCUMENTOS);
+    al_draw_textf(diario->fonte, cinza, 140, 330, 0, "DOCUMENTOS %d/%d", total, TOTAL_DOCUMENTOS);
 
     for (int i = 0; i < TOTAL_DOCUMENTOS; i++) {
         float y = 370 + i * 90;
@@ -211,11 +212,19 @@ int atualizar_telas(int tela, Menu* menu, Menu* pausa, Menu* gameover, unsigned 
         if (acao == ACAO_CONTINUAR) {
             tela = TELA_JOGO;
         }
+        if (acao == ACAO_INSTRUCOES) {
+            tela = TELA_CONTROLES_PAUSA;
+        }
         if (acao == ACAO_VOLTAR_MENU) {
             tela = TELA_MENU;
         }
         if (acao == ACAO_SAIR) {
             *done = true;
+        }
+    }
+    else if (tela == TELA_CONTROLES_PAUSA) {
+        if (key[ALLEGRO_KEY_ESCAPE] & KEY_SEEN) {
+            tela = TELA_PAUSA;
         }
     }
     else if (tela == TELA_GAMEOVER) {
@@ -248,7 +257,7 @@ void desenhar_telas(int tela, Menu* menu, Menu* pausa, TelaTexto* instrucoes, Te
     if (tela == TELA_MENU) {
         desenhar_menu(menu, disp_x);
     }
-    else if (tela == TELA_INSTRUCOES) {
+    else if (tela == TELA_INSTRUCOES || tela == TELA_CONTROLES_PAUSA) {
         desenhar_tela_texto(instrucoes, menu->fonte_titulo, menu->fonte_botao, disp_x);
     }
     else if (tela == TELA_CREDITOS) {

@@ -14,6 +14,7 @@
 #include "mouse.h"
 #include "som.h"
 #include "pontuacao.h"
+#include "relatorio.h"
 
 #pragma endregion
 
@@ -152,8 +153,26 @@ int main()
     float disp_x = 1280;
     float disp_y = 720;
 
+    al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW);
+
     ALLEGRO_DISPLAY* disp = al_create_display(disp_x, disp_y);
     check(disp, "display");
+
+    float largura_tela = al_get_display_width(disp);
+    float altura_tela = al_get_display_height(disp);
+
+    float escala = largura_tela / disp_x;
+    if (altura_tela / disp_y < escala) {
+        escala = altura_tela / disp_y;
+    }
+    float desloc_x = (largura_tela - disp_x * escala) / 2;
+    float desloc_y = (altura_tela - disp_y * escala) / 2;
+
+    ALLEGRO_TRANSFORM tela_cheia;
+    al_identity_transform(&tela_cheia);
+    al_scale_transform(&tela_cheia, escala, escala);
+    al_translate_transform(&tela_cheia, desloc_x, desloc_y);
+    al_use_transform(&tela_cheia);
 
     imagem_granada = al_load_bitmap("granada.png");
     check(imagem_granada, "granada.png");
@@ -176,7 +195,15 @@ int main()
     Menu gameover;
     iniciar_gameover(&gameover, &menu);
 
-    Partida partida = { 0 };
+    Partida partida;
+    reiniciar_partida(&partida);
+
+    Relatorio relatorio;
+    iniciar_relatorio(&relatorio);
+
+    Menu alternativas;
+    iniciar_perguntas(&alternativas, &menu);
+    reiniciar_relatorio(&relatorio, &alternativas);
 
     Mouse mouse;
     iniciar_mouse(&mouse);
@@ -232,13 +259,30 @@ int main()
         {
 
         case ALLEGRO_EVENT_MOUSE_AXES:
+            event.mouse.x = (event.mouse.x - desloc_x) / escala;
+            event.mouse.y = (event.mouse.y - desloc_y) / escala;
             atualizar_mouse(&mouse, &event);
             break;
         case ALLEGRO_EVENT_MOUSE_BUTTON_DOWN:
+            event.mouse.x = (event.mouse.x - desloc_x) / escala;
+            event.mouse.y = (event.mouse.y - desloc_y) / escala;
             atualizar_mouse(&mouse, &event);
             break;
 
         case ALLEGRO_EVENT_TIMER:
+            if (tela == TELA_RELATORIO) {
+                int acao = atualizar_relatorio(&relatorio, &alternativas, &partida, key, &mouse, disp_x);
+
+                if (acao == ACAO_VOLTAR_MENU) {
+                    tela = TELA_MENU;
+                    reiniciar_jogo(&spy, &guarda, &diario, &partida, disp_x, disp_y);
+                }
+                limpar_teclas(key);
+                limpar_mouse(&mouse);
+                redraw = true;
+                break;
+            }
+
             if (tela != TELA_JOGO) {
                 int tela_antes = tela;
                 tela = atualizar_telas(tela, &menu, &pausa, &gameover, key, &mouse, disp_x, &done);
@@ -274,6 +318,11 @@ int main()
             if (key[ALLEGRO_KEY_P] & KEY_SEEN) {
                 tocar_som(&som, SOM_DIARIO);
                 tela = TELA_DIARIO;
+            }
+
+            if (key[ALLEGRO_KEY_K] & KEY_SEEN) { // TEMPORÁRIO
+                reiniciar_relatorio(&relatorio, &alternativas);
+                tela = TELA_RELATORIO;
             }
 
             if (jogar_solicitado) {
@@ -317,7 +366,12 @@ int main()
 
         if (tela != TELA_JOGO && tela != TELA_PAUSA && tela != TELA_GAMEOVER) {
             if (redraw && al_is_event_queue_empty(queue)) {
-                desenhar_telas(tela, &menu, &pausa, &instrucoes, &creditos, &diario, disp_x);
+                if (tela == TELA_RELATORIO) {
+                    desenhar_relatorio(&relatorio, &alternativas, &partida, disp_x, disp_y);
+                }
+                else {
+                    desenhar_telas(tela, &menu, &pausa, &instrucoes, &creditos, &diario, disp_x);
+                }
                 al_flip_display();
                 redraw = false;
             }

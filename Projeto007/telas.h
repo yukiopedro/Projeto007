@@ -14,6 +14,8 @@
 #define TELA_OPCOES 5
 #define TELA_DIARIO 6
 #define TELA_GAMEOVER 7
+#define TELA_RELATORIO 8
+#define TELA_CONTROLES_PAUSA 9
 
 #ifndef KEY_SEEN
 #define KEY_SEEN 1

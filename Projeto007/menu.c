@@ -113,10 +113,11 @@ int atualizar_menu(Menu* menu, unsigned char* key, Mouse* mouse, float disp_x) {
 void desenhar_menu(Menu* menu, float disp_x) { // desenha o título e os botões
     ALLEGRO_COLOR branco = al_map_rgb(255, 255, 255);
     ALLEGRO_COLOR vermelho = al_map_rgb(255, 0, 0);
+    ALLEGRO_COLOR cinza = al_map_rgb(120, 120, 120);
 
     al_clear_to_color(al_map_rgb(0, 0, 0));
 
-    al_draw_text(menu->fonte_titulo, branco, disp_x / 2, 100, ALLEGRO_ALIGN_CENTER, menu->titulo_cima);
+    al_draw_text(menu->fonte_titulo, cinza, disp_x / 2, 100, ALLEGRO_ALIGN_CENTER, menu->titulo_cima);
     al_draw_text(menu->fonte_titulo, vermelho, disp_x / 2, 180, ALLEGRO_ALIGN_CENTER, menu->titulo_baixo);
 
     for (int i = 0; i < menu->total; i++) {
@@ -143,7 +144,7 @@ void iniciar_pausa(Menu* pausa, Menu* menu) { // monta o menu de pausa
     pausa->y_inicial = 290;
     pausa->espaco = 70;
     pausa->nomes[0] = "CONTINUAR";
-    pausa->nomes[1] = "OPÇÕES";
+    pausa->nomes[1] = "CONTROLES";
     pausa->nomes[2] = "VOLTAR AO MENU";
     pausa->nomes[3] = "SAIR PARA ÁREA DE TRABALHO";
 }
@@ -152,6 +153,9 @@ int atualizar_pausa(Menu* pausa, unsigned char* key, Mouse* mouse, float disp_x)
     if (escolher_opcao(pausa, key, mouse, disp_x)) {
         if (pausa->opcao == 0) {
             return ACAO_CONTINUAR;
+        }
+        if (pausa->opcao == 1) {
+            return ACAO_INSTRUCOES;
         }
         if (pausa->opcao == 2) {
             return ACAO_VOLTAR_MENU;

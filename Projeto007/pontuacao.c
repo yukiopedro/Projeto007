@@ -5,6 +5,7 @@ void reiniciar_partida(Partida* partida) { // zera tudo para uma partida nova
     partida->guardas_fora = 0;
     partida->documentos = 0;
     partida->pontuacao = 0;
+    partida->acertos = 0;
 }
 
 void calcular_pontuacao(Partida* partida) { // pontuação = inicial - tempo - documentos que faltaram - guardas
@@ -15,6 +16,7 @@ void calcular_pontuacao(Partida* partida) { // pontuação = inicial - tempo - d
     pontos -= segundos * PONTOS_POR_SEGUNDO;
     pontos -= faltaram * PONTOS_POR_DOCUMENTO;
     pontos -= partida->guardas_fora * PONTOS_POR_GUARDA;
+    pontos += partida->acertos * PONTOS_POR_ACERTO;
 
     if (pontos < 0) {
         pontos = 0;
