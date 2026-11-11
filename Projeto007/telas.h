@@ -18,6 +18,7 @@
 #define TELA_CONTROLES_PAUSA 9
 #define TELA_FASES 10
 #define TELA_RANKING 11
+#define TELA_CONFIRMA_SAIDA 12
 
 #ifndef KEY_SEEN
 #define KEY_SEEN 1

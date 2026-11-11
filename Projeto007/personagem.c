@@ -29,6 +29,10 @@ void inputs_player(Personagem* player, char key[]) {
         player->vel_x = VEL_PERSONAGENS;
         player->sentido = 1;
     }
+    if ((key[ALLEGRO_KEY_S] & KEY_SEEN) && player->grounded && player->y + player->tam_y < ALTURA_TELA - ALTURA_CHAO - 1) {
+        player->y += 6;
+        player->grounded = false;
+    }
     if ((key[ALLEGRO_KEY_D] || key[ALLEGRO_KEY_A]) && key[ALLEGRO_KEY_LSHIFT])
         player->vel_x *= 2;
     if ((key[ALLEGRO_KEY_D] || key[ALLEGRO_KEY_A]) && key[ALLEGRO_KEY_LCTRL])

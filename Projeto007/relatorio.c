@@ -148,7 +148,7 @@ void desenhar_relatorio(Relatorio* relatorio, Menu* alternativas, Partida* parti
         al_draw_textf(alternativas->fonte_botao, branco, disp_x / 2, 310, ALLEGRO_ALIGN_CENTER, "DOCUMENTOS: %d DE %d", partida->documentos, TOTAL_DOCUMENTOS_FASE);
         al_draw_textf(alternativas->fonte_botao, branco, disp_x / 2, 370, ALLEGRO_ALIGN_CENTER, "ACERTOS: %d DE %d", partida->acertos, TOTAL_PERGUNTAS);
         al_draw_textf(alternativas->fonte_botao, vermelho, disp_x / 2, 450, ALLEGRO_ALIGN_CENTER, "PONTUAÇÃO FINAL: %d", partida->pontuacao);
-        al_draw_text(alternativas->fonte_botao, branco, disp_x / 2, 600, ALLEGRO_ALIGN_CENTER, "ENTER PARA VOLTAR AO MENU");
+        al_draw_text(alternativas->fonte_botao, branco, disp_x / 2, 600, ALLEGRO_ALIGN_CENTER, "ENTER PARA CONTINUAR");
         return;
     }
 
