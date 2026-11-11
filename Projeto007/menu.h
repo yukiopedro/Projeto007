@@ -19,6 +19,8 @@
 #define ACAO_VOLTAR_MENU 6
 #define ACAO_TENTAR_NOVAMENTE 7
 #define ACAO_RANKING 8
+#define ACAO_SIM 9
+#define ACAO_NAO 10
 
 typedef struct Menu {
     int opcao;
@@ -45,5 +47,8 @@ void iniciar_pausa(Menu* pausa, Menu* menu);
 void desenhar_pausa(Menu* pausa, float disp_x, float disp_y);
 void iniciar_gameover(Menu* gameover, Menu* menu);
 void desenhar_gameover(Menu* gameover, Partida* partida, float disp_x, float disp_y);
+void iniciar_confirmacao(Menu* confirmacao, Menu* menu);
+int atualizar_confirmacao(Menu* confirmacao, unsigned char* key, Mouse* mouse, float disp_x);
+void desenhar_confirmacao(Menu* confirmacao, float disp_x, float disp_y);
 
 #endif // !menu

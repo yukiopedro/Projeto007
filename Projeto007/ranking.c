@@ -13,17 +13,17 @@ void iniciar_ranking(Ranking* ranking, Menu* menu) { // prepara fontes e zera as
     ranking->som = menu->som;
     ranking->fase_vista = 0;
 
-    for (int f = 0; f < TOTAL_FASES; f++) {
-        ranking->total[f] = 0;
+    for (int i = 0; i < TOTAL_FASES; i++) {
+        ranking->total[i] = 0;
     }
 }
 
-void carregar_ranking(Ranking* ranking) { // lê os arquivos de ranking. aqui consultei bastante a IA para me ajudar
-    for (int f = 0; f < TOTAL_FASES; f++) {
+void carregar_ranking(Ranking* ranking) { // lê os arquivos de ranking. aqui consultei a IA para me ajudar
+    for (int i = 0; i < TOTAL_FASES; i++) {
         char arquivo[32];
-        sprintf(arquivo, "ranking%d.txt", f + 1);
+        sprintf(arquivo, "ranking%d.txt", i + 1);
 
-        ranking->total[f] = 0;
+        ranking->total[i] = 0;
 
         FILE* arq = fopen(arquivo, "r");
         if (arq == NULL) {
@@ -33,18 +33,18 @@ void carregar_ranking(Ranking* ranking) { // lê os arquivos de ranking. aqui co
         char nome[TAM_NOME];
         int pontos;
 
-        while (ranking->total[f] < MAX_RANKING && fscanf(arq, "%15s %d", nome, &pontos) == 2) {
-            int n = ranking->total[f];
+        while (ranking->total[i] < MAX_RANKING && fscanf(arq, "%15s %d", nome, &pontos) == 2) {
+            int n = ranking->total[i];
 
-            copiar_nome(ranking->lista[f][n].nome, nome);
-            ranking->lista[f][n].pontos = pontos;
-            ranking->total[f]++;
+            copiar_nome(ranking->lista[i][n].nome, nome);
+            ranking->lista[i][n].pontos = pontos;
+            ranking->total[i]++;
         }
         fclose(arq);
     }
 }
 
-void salvar_ranking(Ranking* ranking, int fase) { // grava a lista da fase no arquivo, uma linha por registro. aqui consultei bastante a IA para me ajudar
+void salvar_ranking(Ranking* ranking, int fase) { // grava a lista da fase no arquivo, uma linha por registro. aqui consultei a IA para me ajudar
     char arquivo[32];
     sprintf(arquivo, "ranking%d.txt", fase + 1);
 

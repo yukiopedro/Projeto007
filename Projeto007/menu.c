@@ -261,3 +261,68 @@ void desenhar_gameover(Menu* gameover, Partida* partida, float disp_x, float dis
         al_draw_text(gameover->fonte_botao, cor, disp_x / 2, y, ALLEGRO_ALIGN_CENTER, gameover->nomes[i]);
     }
 }
+
+void iniciar_confirmacao(Menu* confirmacao, Menu* menu) { // monta a confirmação de saída da fase
+    confirmacao->fonte_titulo = menu->fonte_titulo;
+    confirmacao->fonte_botao = menu->fonte_botao;
+    confirmacao->som = menu->som;
+
+    confirmacao->titulo_cima = "";
+    confirmacao->titulo_baixo = "ATENÇÃO";
+
+    confirmacao->opcao = 1;
+    confirmacao->total = 2;
+    confirmacao->y_inicial = 500;
+    confirmacao->espaco = 65;
+    confirmacao->nomes[0] = "SIM";
+    confirmacao->nomes[1] = "NÃO";
+}
+
+int atualizar_confirmacao(Menu* confirmacao, unsigned char* key, Mouse* mouse, float disp_x) { // confere o que o jogador escolheu
+    if (escolher_opcao(confirmacao, key, mouse, disp_x)) {
+        if (confirmacao->opcao == 0) {
+            return ACAO_SIM;
+        }
+        if (confirmacao->opcao == 1) {
+            return ACAO_NAO;
+        }
+    }
+
+    if (key[ALLEGRO_KEY_ESCAPE] & MENU_KEY_SEEN) {
+        return ACAO_NAO;
+    }
+
+    return ACAO_NENHUMA;
+}
+
+void desenhar_confirmacao(Menu* confirmacao, float disp_x, float disp_y) { // desenha o quadrado, o aviso e os botões
+    ALLEGRO_COLOR branco = al_map_rgb(255, 255, 255);
+    ALLEGRO_COLOR vermelho = al_map_rgb(255, 0, 0);
+    ALLEGRO_COLOR cinza = al_map_rgb(170, 170, 170);
+    ALLEGRO_COLOR preto = al_map_rgb(0, 0, 0);
+
+    float x1 = disp_x / 2 - 520;
+    float x2 = disp_x / 2 + 520;
+    float y1 = 60;
+    float y2 = 630;
+
+    al_draw_filled_rectangle(x1, y1, x2, y2, preto);
+    al_draw_rectangle(x1, y1, x2, y2, branco, 4);
+
+    al_draw_text(confirmacao->fonte_titulo, vermelho, disp_x / 2, y1 + 30, ALLEGRO_ALIGN_CENTER, confirmacao->titulo_baixo);
+
+    al_draw_multiline_text(confirmacao->fonte_botao, branco, disp_x / 2, 180, 960, 34, ALLEGRO_ALIGN_CENTER, "Você chegou na saída e agora deve enviar um relatório para seus aliados com as informações que adquiriu.");
+    al_draw_multiline_text(confirmacao->fonte_botao, cinza, disp_x / 2, 310, 960, 34, ALLEGRO_ALIGN_CENTER, "Recomendamos ler os documentos novamente antes de continuar.");
+
+    al_draw_text(confirmacao->fonte_botao, vermelho, disp_x / 2, 430, ALLEGRO_ALIGN_CENTER, "Deseja prosseguir?");
+
+    for (int i = 0; i < confirmacao->total; i++) {
+        float y = confirmacao->y_inicial + i * confirmacao->espaco;
+        ALLEGRO_COLOR cor = branco;
+
+        if (i == confirmacao->opcao) {
+            cor = vermelho;
+        }
+        al_draw_text(confirmacao->fonte_botao, cor, disp_x / 2, y, ALLEGRO_ALIGN_CENTER, confirmacao->nomes[i]);
+    }
+}

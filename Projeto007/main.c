@@ -128,7 +128,7 @@ bool colisao(int ax1, int ay1, int ax2, int ay2, int bx1, int by1, int bx2, int 
 
 void reiniciar_jogo(Personagem* spy, NPC* guarda, Diario* diario, Partida* partida, float disp_x, float disp_y) { // reinicia o jogo
     iniciar_cenario(disp_x, disp_y);
-    criar_player(spy, 50, 650);
+    criar_player(spy, 40, 650);
     criar_npc(guarda, 1100, 650, GUARDA);
     granada.used = false;
     reiniciar_diario(diario);
@@ -197,6 +197,9 @@ int main()
     Menu gameover;
     iniciar_gameover(&gameover, &menu);
 
+    Menu confirmacao;
+    iniciar_confirmacao(&confirmacao, &menu);
+
     Partida partida;
     reiniciar_partida(&partida);
 
@@ -243,15 +246,15 @@ int main()
     ALLEGRO_EVENT event;
 
     ALLEGRO_BITMAP* spritesheet = al_load_bitmap(LOCAL_SPRITESHEET);
+    ALLEGRO_BITMAP* sprite_documento = al_load_bitmap(LOCAL_SPRITE_DOCUMENTO);
+    ALLEGRO_BITMAP* sprite_plataforma = al_load_bitmap(LOCAL_SPRITE_PLATAFORMA);
 
     Personagem spy;
-    criar_player(&spy, 50, 50);
+    criar_player(&spy, 40, 650);
 
     NPC guarda;
     criar_npc(&guarda, 1100, 650, GUARDA);
 
-    ALLEGRO_COLOR vermelho = al_map_rgb(255, 0, 0);
-    ALLEGRO_COLOR azul = al_map_rgb(0, 0, 255);
     ALLEGRO_COLOR branco = al_map_rgb(255, 255, 255);
 
 #define KEY_SEEN     1
@@ -334,6 +337,22 @@ int main()
                 break;
             }
 
+            if (tela == TELA_CONFIRMA_SAIDA) {
+                int acao = atualizar_confirmacao(&confirmacao, key, &mouse, disp_x);
+
+                if (acao == ACAO_SIM) {
+                    reiniciar_relatorio(&relatorio, &alternativas);
+                    tela = TELA_RELATORIO;
+                }
+                if (acao == ACAO_NAO) {
+                    tela = TELA_JOGO;
+                }
+                limpar_teclas(key);
+                limpar_mouse(&mouse);
+                redraw = true;
+                break;
+            }
+
             if (tela != TELA_JOGO) {
                 int tela_antes = tela;
                 tela = atualizar_telas(tela, &menu, &pausa, &gameover, key, &mouse, disp_x, &done);
@@ -361,6 +380,10 @@ int main()
                     coletar_documento(&diario, documento);
                     partida.documentos++;
                     tocar_som(&som, SOM_COLETA);
+                }
+                if (chegou_saida(jogador) && (key[ALLEGRO_KEY_E] & KEY_SEEN)) {
+                    confirmacao.opcao = 1;
+                    tela = TELA_CONFIRMA_SAIDA;
                 }
             }
 
@@ -397,7 +420,7 @@ int main()
             break;
 
         case ALLEGRO_EVENT_KEY_DOWN:
-            if (event.keyboard.keycode == ALLEGRO_KEY_Q &&
+            if (event.keyboard.keycode == ALLEGRO_KEY_Q && tela == TELA_JOGO &&
                 !(key[ALLEGRO_KEY_Q] & KEY_DOWN)) {
                 jogar_solicitado = true;
             }
@@ -422,7 +445,7 @@ int main()
         if (done)
             break;
 
-        if (tela != TELA_JOGO && tela != TELA_PAUSA && tela != TELA_GAMEOVER) {
+        if (tela != TELA_JOGO && tela != TELA_PAUSA && tela != TELA_GAMEOVER && tela != TELA_CONFIRMA_SAIDA) {
             if (redraw && al_is_event_queue_empty(queue)) {
                 if (tela == TELA_RELATORIO) {
                     desenhar_relatorio(&relatorio, &alternativas, &partida, disp_x, disp_y);
@@ -445,7 +468,9 @@ int main()
         if (redraw && al_is_event_queue_empty(queue))
         {
             al_clear_to_color(al_map_rgb(0, 0, 0));
-            desenhar_cenario();
+            renderizar_plataformas(sprite_plataforma);
+            renderizar_documentos(sprite_documento);
+            desenhar_saida();
             desenhar_granada(&granada);
 
             renderizar_personagem(&spy, spritesheet, total_frames);
@@ -465,6 +490,13 @@ int main()
 
             if (tela == TELA_GAMEOVER) {
                 desenhar_gameover(&gameover, &partida, disp_x, disp_y);
+                al_flip_display();
+                redraw = false;
+                continue;
+            }
+
+            if (tela == TELA_CONFIRMA_SAIDA) {
+                desenhar_confirmacao(&confirmacao, disp_x, disp_y);
                 al_flip_display();
                 redraw = false;
                 continue;

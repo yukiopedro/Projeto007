@@ -15,6 +15,10 @@
 #define VEL_PERSONAGENS 8
 #define ATRITO 2.0f
 
+#ifndef KEY_SEEN
+#define KEY_SEEN 1
+#endif
+
 enum estado_personagem {
     PARADO,
     ANDANDO1,
