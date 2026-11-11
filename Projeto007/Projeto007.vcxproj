@@ -142,6 +142,7 @@
   <ItemGroup>
     <ClCompile Include="cenario.c" />
     <ClCompile Include="fases.c" />
+    <ClCompile Include="granada.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="menu.c" />
     <ClCompile Include="mouse.c" />
@@ -158,6 +159,7 @@
   <ItemGroup>
     <ClInclude Include="cenario.h" />
     <ClInclude Include="fases.h" />
+    <ClInclude Include="granada.h" />
     <ClInclude Include="menu.h" />
     <ClInclude Include="mouse.h" />
     <ClInclude Include="ranking.h" />
