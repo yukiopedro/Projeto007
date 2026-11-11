@@ -15,6 +15,8 @@
 #include "som.h"
 #include "pontuacao.h"
 #include "relatorio.h"
+#include "fases.h"
+#include "ranking.h"
 
 #pragma endregion
 
@@ -205,6 +207,13 @@ int main()
     iniciar_perguntas(&alternativas, &menu);
     reiniciar_relatorio(&relatorio, &alternativas);
 
+    Fases fases;
+    iniciar_fases(&fases, &menu, diario.contexto);
+
+    Ranking ranking;
+    iniciar_ranking(&ranking, &menu);
+    carregar_ranking(&ranking);
+
     Mouse mouse;
     iniciar_mouse(&mouse);
 
@@ -270,11 +279,48 @@ int main()
             break;
 
         case ALLEGRO_EVENT_TIMER:
-            if (tela == TELA_RELATORIO) {
-                int acao = atualizar_relatorio(&relatorio, &alternativas, &partida, key, &mouse, disp_x);
+            if (tela == TELA_FASES) {
+                int acao = atualizar_fases(&fases, key, &mouse, disp_x);
+
+                if (acao == ACAO_JOGAR) {
+                    copiar_nome(partida.nome, fases.nome);
+                    partida.fase = fases.atual;
+                    reiniciar_nome(&fases);
+                    tela = TELA_JOGO;
+                }
+                if (acao == ACAO_VOLTAR_MENU) {
+                    tela = TELA_MENU;
+                }
+                limpar_teclas(key);
+                limpar_mouse(&mouse);
+                redraw = true;
+                break;
+            }
+
+            if (tela == TELA_RANKING) {
+                int acao = atualizar_ranking(&ranking, key);
 
                 if (acao == ACAO_VOLTAR_MENU) {
                     tela = TELA_MENU;
+                }
+                limpar_teclas(key);
+                limpar_mouse(&mouse);
+                redraw = true;
+                break;
+            }
+
+            if (tela == TELA_RELATORIO) {
+                bool fim_antes = relatorio.fim;
+                int acao = atualizar_relatorio(&relatorio, &alternativas, &partida, key, &mouse, disp_x);
+
+                if (!fim_antes && relatorio.fim) {
+                    ordenar_ranking(&ranking, partida.fase, partida.nome, partida.pontuacao);
+                    salvar_ranking(&ranking, partida.fase);
+                }
+
+                if (acao == ACAO_VOLTAR_MENU) {
+                    ranking.fase_vista = partida.fase;
+                    tela = TELA_RANKING;
                     reiniciar_jogo(&spy, &guarda, &diario, &partida, disp_x, disp_y);
                 }
                 limpar_teclas(key);
@@ -352,6 +398,13 @@ int main()
             }
             key[event.keyboard.keycode] = KEY_SEEN | KEY_DOWN;
             break;
+
+        case ALLEGRO_EVENT_KEY_CHAR:
+            if (tela == TELA_FASES) {
+                digitar_nome(&fases, event.keyboard.unichar, event.keyboard.keycode);
+            }
+            break;
+
         case ALLEGRO_EVENT_KEY_UP:
             key[event.keyboard.keycode] &= ~KEY_DOWN;
             break;
@@ -368,6 +421,12 @@ int main()
             if (redraw && al_is_event_queue_empty(queue)) {
                 if (tela == TELA_RELATORIO) {
                     desenhar_relatorio(&relatorio, &alternativas, &partida, disp_x, disp_y);
+                }
+                else if (tela == TELA_FASES) {
+                    desenhar_fases(&fases, disp_x, disp_y);
+                }
+                else if (tela == TELA_RANKING) {
+                    desenhar_ranking(&ranking, disp_x, disp_y);
                 }
                 else {
                     desenhar_telas(tela, &menu, &pausa, &instrucoes, &creditos, &diario, disp_x);

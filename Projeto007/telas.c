@@ -76,7 +76,7 @@ bool iniciar_diario(Diario* diario, ALLEGRO_FONT* fonte_titulo) { // escreve os 
     diario->fonte = al_load_ttf_font("assets/PressStart2P-Regular.ttf", 16, 0);
     diario->fonte_aviso = al_load_ttf_font("assets/PressStart2P-Regular.ttf", AVISO_FONTE, 0);
 
-    diario->contexto = "Estamos em plena Guerra Fria e um pequeno satélite soviético acaba de cruzar o céu dos EUA. Infiltrado na CIA, preciso encontrar os documentos que mostram o medo e os planos de Washington. Se me descobrirem, a missão e a minha vida acabam aqui.";
+    diario->contexto = "Estamos em 1957, em plena Guerra Fria. A União Soviética lançou o Sputnik, o primeiro satélite artificial da história, e os americanos olham para o céu com medo de estar ficando para trás na Corrida Espacial. Infiltrado na CIA, preciso encontrar os documentos que mostram o medo e os planos de Washington. Se me descobrirem, a missão e a minha vida acabam aqui.";
 
     diario->titulo[0] = "OUT 1957 - O FOGUETE R-7";
     diario->texto[0] = "O Sputnik foi lançado por um foguete R-7, que também pode levar uma bomba nuclear até os EUA. O satélite é um aviso ao mundo.";
@@ -194,7 +194,10 @@ int atualizar_telas(int tela, Menu* menu, Menu* pausa, Menu* gameover, unsigned 
         int acao = atualizar_menu(menu, key, mouse, disp_x);
 
         if (acao == ACAO_JOGAR) {
-            tela = TELA_JOGO;
+            tela = TELA_FASES;
+        }
+        if (acao == ACAO_RANKING) {
+            tela = TELA_RANKING;
         }
         if (acao == ACAO_INSTRUCOES) {
             tela = TELA_INSTRUCOES;

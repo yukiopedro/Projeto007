@@ -141,10 +141,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="cenario.c" />
+    <ClCompile Include="fases.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="menu.c" />
     <ClCompile Include="mouse.c" />
     <ClCompile Include="pontuacao.c" />
+    <ClCompile Include="ranking.c" />
     <ClCompile Include="relatorio.c" />
     <ClCompile Include="som.c" />
     <ClCompile Include="telas.c" />
@@ -155,8 +157,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cenario.h" />
+    <ClInclude Include="fases.h" />
     <ClInclude Include="menu.h" />
     <ClInclude Include="mouse.h" />
+    <ClInclude Include="ranking.h" />
     <ClInclude Include="relatorio.h" />
     <ClInclude Include="personagem.h" />
     <ClInclude Include="pontuacao.h" />

@@ -23,3 +23,13 @@ void calcular_pontuacao(Partida* partida) { // pontuação = inicial - tempo - d
     }
     partida->pontuacao = pontos;
 }
+
+void copiar_nome(char* destino, const char* origem) { // copia o nome letra por letra
+    int i = 0;
+
+    while (origem[i] != '\0' && i < TAM_NOME - 1) {
+        destino[i] = origem[i];
+        i++;
+    }
+    destino[i] = '\0';
+}
