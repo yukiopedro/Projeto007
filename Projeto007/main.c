@@ -12,6 +12,9 @@
 #include "menu.h"
 #include "telas.h"
 #include "mouse.h"
+#include "som.h"
+#include "pontuacao.h"
+#include "relatorio.h"
 
 #pragma endregion
 
@@ -121,6 +124,14 @@ bool colisao(int ax1, int ay1, int ax2, int ay2, int bx1, int by1, int bx2, int 
 
 }
 
+void reiniciar_jogo(Personagem* spy, NPC* guarda, Diario* diario, Partida* partida, float disp_x, float disp_y) { // reinicia o jogo
+    iniciar_cenario(disp_x, disp_y);
+    criar_player(spy, 50, 50);
+    criar_npc(guarda, 80, 80, GUARDA);
+    granada.used = false;
+    reiniciar_diario(diario);
+    reiniciar_partida(partida);
+}
 
 int main()
 {
@@ -142,8 +153,26 @@ int main()
     float disp_x = 1280;
     float disp_y = 720;
 
+    al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW);
+
     ALLEGRO_DISPLAY* disp = al_create_display(disp_x, disp_y);
     check(disp, "display");
+
+    float largura_tela = al_get_display_width(disp);
+    float altura_tela = al_get_display_height(disp);
+
+    float escala = largura_tela / disp_x;
+    if (altura_tela / disp_y < escala) {
+        escala = altura_tela / disp_y;
+    }
+    float desloc_x = (largura_tela - disp_x * escala) / 2;
+    float desloc_y = (altura_tela - disp_y * escala) / 2;
+
+    ALLEGRO_TRANSFORM tela_cheia;
+    al_identity_transform(&tela_cheia);
+    al_scale_transform(&tela_cheia, escala, escala);
+    al_translate_transform(&tela_cheia, desloc_x, desloc_y);
+    al_use_transform(&tela_cheia);
 
     imagem_granada = al_load_bitmap("granada.png");
     check(imagem_granada, "granada.png");
@@ -153,8 +182,28 @@ int main()
     Menu menu;
     check(iniciar_menu(&menu), "menu");
 
+    Som som;
+    iniciar_som(&som);
+    menu.som = &som;
+
+    Diario diario;
+    check(iniciar_diario(&diario, menu.fonte_titulo), "diario");
+
     Menu pausa;
     iniciar_pausa(&pausa, &menu);
+
+    Menu gameover;
+    iniciar_gameover(&gameover, &menu);
+
+    Partida partida;
+    reiniciar_partida(&partida);
+
+    Relatorio relatorio;
+    iniciar_relatorio(&relatorio);
+
+    Menu alternativas;
+    iniciar_perguntas(&alternativas, &menu);
+    reiniciar_relatorio(&relatorio, &alternativas);
 
     Mouse mouse;
     iniciar_mouse(&mouse);
@@ -212,41 +261,79 @@ int main()
         {
 
         case ALLEGRO_EVENT_MOUSE_AXES:
+            event.mouse.x = (event.mouse.x - desloc_x) / escala;
+            event.mouse.y = (event.mouse.y - desloc_y) / escala;
             atualizar_mouse(&mouse, &event);
             break;
         case ALLEGRO_EVENT_MOUSE_BUTTON_DOWN:
+            event.mouse.x = (event.mouse.x - desloc_x) / escala;
+            event.mouse.y = (event.mouse.y - desloc_y) / escala;
             atualizar_mouse(&mouse, &event);
             break;
 
         case ALLEGRO_EVENT_TIMER:
             total_frames++;
+            if (tela == TELA_RELATORIO) {
+                int acao = atualizar_relatorio(&relatorio, &alternativas, &partida, key, &mouse, disp_x);
+
+                if (acao == ACAO_VOLTAR_MENU) {
+                    tela = TELA_MENU;
+                    reiniciar_jogo(&spy, &guarda, &diario, &partida, disp_x, disp_y);
+                }
+                limpar_teclas(key);
+                limpar_mouse(&mouse);
+                redraw = true;
+                break;
+            }
+
             if (tela != TELA_JOGO) {
                 int tela_antes = tela;
-                tela = atualizar_telas(tela, &menu, &pausa, key, &mouse, disp_x, &done);
+                tela = atualizar_telas(tela, &menu, &pausa, &gameover, key, &mouse, disp_x, &done);
 
-                if (tela_antes == TELA_PAUSA && tela == TELA_MENU) { // reinicia o jogo quando o jogador volta pro menu
-                    iniciar_cenario(disp_x, disp_y);
-                    spy.x = 200;
-                    spy.y = 200;
-                    spy.vel_x = 0;
-                    spy.vel_y = 0;
-                    spy.grounded = false;
-                    criar_npc(&guarda, 80, 80, GUARDA);
-                    granada.used = false;
+                if ((tela_antes == TELA_PAUSA && tela == TELA_MENU) || (tela_antes == TELA_GAMEOVER && tela != TELA_GAMEOVER)) {
+                    reiniciar_jogo(&spy, &guarda, &diario, &partida, disp_x, disp_y);
                 }
                 redraw = true;
                 break;
             }
 
+            partida.frames++;
+            bool estava_no_chao = spy.grounded;
             inputs_player(&spy, key);
+
+            if (estava_no_chao && !spy.grounded) {
+                tocar_som(&som, SOM_PULAR);
+            }
 
             if (key[ALLEGRO_KEY_E]) {
                 Cenario jogador = { spy.x, spy.y, spy.tam_x, spy.tam_y };
-                coletar_cenario(jogador);
+                int documento = coletar_cenario(jogador);
+
+                if (documento != -1) {
+                    coletar_documento(&diario, documento);
+                    partida.documentos++;
+                    tocar_som(&som, SOM_COLETA);
+                }
+            }
+
+            atualizar_aviso(&diario);
+
+            if (key[ALLEGRO_KEY_P] & KEY_SEEN) {
+                tocar_som(&som, SOM_DIARIO);
+                tela = TELA_DIARIO;
+            }
+
+            if (key[ALLEGRO_KEY_K] & KEY_SEEN) { // TEMPORÁRIO
+                reiniciar_relatorio(&relatorio, &alternativas);
+                tela = TELA_RELATORIO;
             }
 
             if (jogar_solicitado) {
+                bool tinha_granada = granada.used;
                 jogar_granada(&granada, &spy);
+                if (!tinha_granada && granada.used) {
+                    tocar_som(&som, SOM_GRANADA);
+                }
                 jogar_solicitado = false;
             }
             atualizar_granada(&granada);
@@ -280,9 +367,14 @@ int main()
         if (done)
             break;
 
-        if (tela != TELA_JOGO && tela != TELA_PAUSA) {
+        if (tela != TELA_JOGO && tela != TELA_PAUSA && tela != TELA_GAMEOVER) {
             if (redraw && al_is_event_queue_empty(queue)) {
-                desenhar_telas(tela, &menu, &pausa, &instrucoes, &creditos, disp_x);
+                if (tela == TELA_RELATORIO) {
+                    desenhar_relatorio(&relatorio, &alternativas, &partida, disp_x, disp_y);
+                }
+                else {
+                    desenhar_telas(tela, &menu, &pausa, &instrucoes, &creditos, &diario, disp_x);
+                }
                 al_flip_display();
                 redraw = false;
             }
@@ -294,16 +386,26 @@ int main()
             al_clear_to_color(al_map_rgb(0, 0, 0));
             desenhar_cenario();
             desenhar_granada(&granada);
-            al_draw_textf(font, branco, disp_x - 10, 5, ALLEGRO_ALIGN_RIGHT, "Documentos coletados: %d", documentos);
-            al_draw_textf(font, branco, disp_x - 10, 15, ALLEGRO_ALIGN_RIGHT, "Vivo: %d", spy.vivo);
+            al_draw_textf(font, branco, disp_x - 10, 5, ALLEGRO_ALIGN_RIGHT, "Vivo: %d", spy.vivo);
             al_draw_textf(font, branco, 0, 0, 0, "X: %.1f Y: %.1f", spy.x, spy.y);
 
             renderizar_personagem(&spy, spritesheet, total_frames);
             renderizar_personagem(&(guarda.p), spritesheet, total_frames);
             renderizar_lanterna(&guarda, spritesheet);
 
+            int segundos = partida.frames / 30;
+            al_draw_textf(menu.fonte_botao, branco, disp_x / 2, 10, ALLEGRO_ALIGN_CENTER, "%02d:%02d", segundos / 60, segundos % 60);
+            desenhar_aviso(&diario, disp_x);
+            
             if (tela == TELA_PAUSA) {
                 desenhar_pausa(&pausa, disp_x, disp_y);
+                al_flip_display();
+                redraw = false;
+                continue;
+            }
+
+            if (tela == TELA_GAMEOVER) {
+                desenhar_gameover(&gameover, &partida, disp_x, disp_y);
                 al_flip_display();
                 redraw = false;
                 continue;
@@ -329,6 +431,13 @@ int main()
             colisao_plataforma(&guarda.p, guarda.p.y - guarda.p.vel_y);
             mover_NPC(&guarda);
             colisao_lanterna(&spy, &guarda);
+
+            if (!spy.vivo) {
+                calcular_pontuacao(&partida);
+                tocar_som(&som, SOM_GAMEOVER);
+                gameover.opcao = 0;
+                tela = TELA_GAMEOVER;
+            }
 
             if (granada.x + GRANADA_LARGURA >= disp_x) {
                 granada.x = disp_x - GRANADA_LARGURA;

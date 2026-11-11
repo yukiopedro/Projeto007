@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <allegro5/allegro5.h>
 #include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_primitives.h>
 #include "telas.h"
 
 void iniciar_tela_texto(TelaTexto* tela, const char* titulo) { // define o título e zera a quantidade de linhas
@@ -24,6 +26,8 @@ void iniciar_instrucoes(TelaTexto* tela) { // preenche a tela de controles
     add_linha(tela, "SHIFT", "CORRER");
     add_linha(tela, "CTRL", "ANDAR DEVAGAR");
     add_linha(tela, "E", "INTERAGIR");
+    add_linha(tela, "Q", "JOGAR GRANADA");
+    add_linha(tela, "P", "ABRIR DIÁRIO");
     add_linha(tela, "ESC", "PAUSAR");
 }
 
@@ -67,7 +71,125 @@ void limpar_teclas(unsigned char* key) { // apaga as teclas apertadas e mantém 
     }
 }
 
-int atualizar_telas(int tela, Menu* menu, Menu* pausa, unsigned char* key, Mouse* mouse, float disp_x, bool* done) { // trata a tela atual e retorna a tela para onde o jogo vai
+bool iniciar_diario(Diario* diario, ALLEGRO_FONT* fonte_titulo) { // escreve os textos do diário e carrega a fonte
+    diario->fonte_titulo = fonte_titulo;
+    diario->fonte = al_load_ttf_font("assets/PressStart2P-Regular.ttf", 16, 0);
+    diario->fonte_aviso = al_load_ttf_font("assets/PressStart2P-Regular.ttf", AVISO_FONTE, 0);
+
+    diario->contexto = "Estamos em plena Guerra Fria e um pequeno satélite soviético acaba de cruzar o céu dos EUA. Infiltrado na CIA, preciso encontrar os documentos que mostram o medo e os planos de Washington. Se me descobrirem, a missão e a minha vida acabam aqui.";
+
+    diario->titulo[0] = "OUT 1957 - O FOGUETE R-7";
+    diario->texto[0] = "O Sputnik foi lançado por um foguete R-7, que também pode levar uma bomba nuclear até os EUA. O satélite é um aviso ao mundo.";
+
+    diario->titulo[1] = "04/10/1957 - SPUTNIK 1";
+    diario->texto[1] = "A URSS lançou o primeiro satélite artificial da história. O bipe do Sputnik pode ser ouvido por rádio no mundo todo. Os americanos estão em choque.";
+
+    diario->titulo[2] = "06/12/1957 - FALHA DO VANGUARD";
+    diario->texto[2] = "O foguete americano Vanguard explodiu logo após decolar, diante das câmeras. Os jornais falam em fracasso. Os EUA correm para tentar de novo.";
+
+    reiniciar_diario(diario);
+    return true;
+}
+
+void reiniciar_diario(Diario* diario) { // marca todos os documentos como não coletados e apaga o aviso
+    for (int i = 0; i < TOTAL_DOCUMENTOS; i++) {
+        diario->coletado[i] = false;
+    }
+    diario->aviso = 0;
+}
+
+void coletar_documento(Diario* diario, int numero) { // guarda o documento no diário e mostra o aviso
+    if (numero < 0 || numero >= TOTAL_DOCUMENTOS) {
+        return;
+    }
+    diario->coletado[numero] = true;
+    diario->aviso = AVISO_FRAMES;
+}
+
+void atualizar_aviso(Diario* diario) { // faz o aviso ir sumindo com o tempo
+    if (diario->aviso > 0) {
+        diario->aviso--;
+    }
+}
+
+void desenhar_aviso(Diario* diario, float disp_x) { // desenha a notificação
+    if (diario->aviso <= 0) {
+        return;
+    }
+
+    const char* linhas[AVISO_LINHAS] = { "NOVA INFORMAÇÃO", "CONFIDENCIAL COLETADA.", "APERTE P PARA", "VER OS DETALHES." };
+
+    ALLEGRO_COLOR branco = al_map_rgb(255, 255, 255);
+    ALLEGRO_COLOR vermelho = al_map_rgb(255, 0, 0);
+
+    float altura_linha = al_get_font_line_height(diario->fonte_aviso) + 6;
+    float margem = 14;
+
+    float larg_texto = 0;
+
+    for (int i = 0; i < AVISO_LINHAS; i++) {
+        float larg = al_get_text_width(diario->fonte_aviso, linhas[i]);
+
+        if (larg > larg_texto) {
+            larg_texto = larg;
+        }
+    }
+
+    float w = larg_texto + margem * 2;
+    float h = altura_linha * AVISO_LINHAS + margem * 2 - 6;
+    float x = disp_x - w - 10;
+    float y = 10;
+
+    al_draw_filled_rectangle(x, y, x + w, y + h, al_map_rgb(20, 20, 20));
+    al_draw_rectangle(x, y, x + w, y + h, vermelho, 3);
+
+    for (int i = 0; i < AVISO_LINHAS; i++) {
+        ALLEGRO_COLOR cor = branco;
+
+        if (i >= 2) {
+            cor = vermelho;
+        }
+        al_draw_text(diario->fonte_aviso, cor, x + margem, y + margem + i * altura_linha, 0, linhas[i]);
+    }
+}
+
+void desenhar_diario(Diario* diario, float disp_x) { // desenha o contexto e os documentos coletados
+    ALLEGRO_COLOR branco = al_map_rgb(255, 255, 255);
+    ALLEGRO_COLOR vermelho = al_map_rgb(255, 0, 0);
+    ALLEGRO_COLOR cinza = al_map_rgb(120, 120, 120);
+
+    int total = 0;
+
+    for (int i = 0; i < TOTAL_DOCUMENTOS; i++) {
+        if (diario->coletado[i]) {
+            total++;
+        }
+    }
+
+    al_clear_to_color(al_map_rgb(0, 0, 0));
+    al_draw_text(diario->fonte_titulo, vermelho, disp_x / 2, 40, ALLEGRO_ALIGN_CENTER, "DIÁRIO");
+
+    al_draw_text(diario->fonte, vermelho, 140, 150, 0, "CONTEXTO");
+    al_draw_multiline_text(diario->fonte, branco, 140, 180, 1000, 0, 0, diario->contexto);
+
+    al_draw_textf(diario->fonte, cinza, 140, 330, 0, "DOCUMENTOS %d/%d", total, TOTAL_DOCUMENTOS);
+
+    for (int i = 0; i < TOTAL_DOCUMENTOS; i++) {
+        float y = 370 + i * 90;
+
+        if (diario->coletado[i]) {
+            al_draw_text(diario->fonte, vermelho, 140, y, 0, diario->titulo[i]);
+            al_draw_multiline_text(diario->fonte, branco, 140, y + 26, 1000, 0, 0, diario->texto[i]);
+        }
+        else {
+            al_draw_text(diario->fonte, cinza, 140, y, 0, "??? DOCUMENTO NÃO ENCONTRADO");
+        }
+    }
+
+    al_draw_text(diario->fonte, branco, disp_x / 2, 670, ALLEGRO_ALIGN_CENTER, "ESC PARA FECHAR");
+}
+
+int atualizar_telas(int tela, Menu* menu, Menu* pausa, Menu* gameover, unsigned char* key, Mouse* mouse, float disp_x, bool* done) { // trata a tela atual e retorna a tela para onde o jogo vai
     if (tela == TELA_MENU) {
         int acao = atualizar_menu(menu, key, mouse, disp_x);
 
@@ -90,11 +212,34 @@ int atualizar_telas(int tela, Menu* menu, Menu* pausa, unsigned char* key, Mouse
         if (acao == ACAO_CONTINUAR) {
             tela = TELA_JOGO;
         }
+        if (acao == ACAO_INSTRUCOES) {
+            tela = TELA_CONTROLES_PAUSA;
+        }
         if (acao == ACAO_VOLTAR_MENU) {
             tela = TELA_MENU;
         }
         if (acao == ACAO_SAIR) {
             *done = true;
+        }
+    }
+    else if (tela == TELA_CONTROLES_PAUSA) {
+        if (key[ALLEGRO_KEY_ESCAPE] & KEY_SEEN) {
+            tela = TELA_PAUSA;
+        }
+    }
+    else if (tela == TELA_GAMEOVER) {
+        int acao = atualizar_gameover(gameover, key, mouse, disp_x);
+
+        if (acao == ACAO_TENTAR_NOVAMENTE) {
+            tela = TELA_JOGO;
+        }
+        if (acao == ACAO_VOLTAR_MENU) {
+            tela = TELA_MENU;
+        }
+    }
+    else if (tela == TELA_DIARIO) {
+        if (key[ALLEGRO_KEY_ESCAPE] & KEY_SEEN) {
+            tela = TELA_JOGO;
         }
     }
     else if (tela == TELA_INSTRUCOES || tela == TELA_CREDITOS) {
@@ -108,14 +253,17 @@ int atualizar_telas(int tela, Menu* menu, Menu* pausa, unsigned char* key, Mouse
     return tela;
 }
 
-void desenhar_telas(int tela, Menu* menu, Menu* pausa, TelaTexto* instrucoes, TelaTexto* creditos, float disp_x) { // desenha a tela atual
+void desenhar_telas(int tela, Menu* menu, Menu* pausa, TelaTexto* instrucoes, TelaTexto* creditos, Diario* diario, float disp_x) { // desenha a tela atual
     if (tela == TELA_MENU) {
         desenhar_menu(menu, disp_x);
     }
-    else if (tela == TELA_INSTRUCOES) {
+    else if (tela == TELA_INSTRUCOES || tela == TELA_CONTROLES_PAUSA) {
         desenhar_tela_texto(instrucoes, menu->fonte_titulo, menu->fonte_botao, disp_x);
     }
     else if (tela == TELA_CREDITOS) {
         desenhar_tela_texto(creditos, menu->fonte_titulo, menu->fonte_botao, disp_x);
+    }
+    else if (tela == TELA_DIARIO) {
+        desenhar_diario(diario, disp_x);
     }
 }

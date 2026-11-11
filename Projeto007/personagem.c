@@ -33,10 +33,6 @@ void inputs_player(Personagem* player, char key[]) {
         player->vel_x *= 2;
     if ((key[ALLEGRO_KEY_D] || key[ALLEGRO_KEY_A]) && key[ALLEGRO_KEY_LCTRL])
         player->vel_x *= 0.5;
-    if (key[ALLEGRO_KEY_E]) {
-        Cenario jogador = {player->x, player->y, player->tam_x, player->tam_y };
-        coletar_cenario(jogador);
-    }
 }
 
 void mover_player(Personagem* p) {
@@ -82,6 +78,7 @@ void colisao_lanterna(Personagem* player, NPC* inimigo) {
     if (player->y + player->tam_y <= inimigo->cone_y) return; // borda superior
     if (player->y >= inimigo->cone_y + inimigo->cone_h) return; // borda inferior
     player->vivo = false;
+    
 }
 
 // Função que renderizam personagens
