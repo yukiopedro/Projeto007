@@ -18,6 +18,7 @@
 #define ACAO_CONTINUAR 5
 #define ACAO_VOLTAR_MENU 6
 #define ACAO_TENTAR_NOVAMENTE 7
+#define ACAO_RANKING 8
 
 typedef struct Menu {
     int opcao;

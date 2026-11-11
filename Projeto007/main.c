@@ -15,6 +15,8 @@
 #include "som.h"
 #include "pontuacao.h"
 #include "relatorio.h"
+#include "fases.h"
+#include "ranking.h"
 
 #pragma endregion
 
@@ -126,8 +128,8 @@ bool colisao(int ax1, int ay1, int ax2, int ay2, int bx1, int by1, int bx2, int 
 
 void reiniciar_jogo(Personagem* spy, NPC* guarda, Diario* diario, Partida* partida, float disp_x, float disp_y) { // reinicia o jogo
     iniciar_cenario(disp_x, disp_y);
-    criar_player(spy, 50, 50);
-    criar_npc(guarda, 80, 80, GUARDA);
+    criar_player(spy, 50, 650);
+    criar_npc(guarda, 1100, 650, GUARDA);
     granada.used = false;
     reiniciar_diario(diario);
     reiniciar_partida(partida);
@@ -205,6 +207,13 @@ int main()
     iniciar_perguntas(&alternativas, &menu);
     reiniciar_relatorio(&relatorio, &alternativas);
 
+    Fases fases;
+    iniciar_fases(&fases, &menu, diario.contexto);
+
+    Ranking ranking;
+    iniciar_ranking(&ranking, &menu);
+    carregar_ranking(&ranking);
+
     Mouse mouse;
     iniciar_mouse(&mouse);
 
@@ -239,7 +248,7 @@ int main()
     criar_player(&spy, 50, 50);
 
     NPC guarda;
-    criar_npc(&guarda, 80, 80, GUARDA);
+    criar_npc(&guarda, 1100, 650, GUARDA);
 
     ALLEGRO_COLOR vermelho = al_map_rgb(255, 0, 0);
     ALLEGRO_COLOR azul = al_map_rgb(0, 0, 255);
@@ -273,11 +282,50 @@ int main()
 
         case ALLEGRO_EVENT_TIMER:
             total_frames++;
-            if (tela == TELA_RELATORIO) {
-                int acao = atualizar_relatorio(&relatorio, &alternativas, &partida, key, &mouse, disp_x);
+
+            if (tela == TELA_FASES) {
+                int acao = atualizar_fases(&fases, key, &mouse, disp_x);
+
+                if (acao == ACAO_JOGAR) {
+                    copiar_nome(partida.nome, fases.nome);
+                    partida.fase = fases.atual;
+                    reiniciar_nome(&fases);
+                    tela = TELA_JOGO;
+                }
+                if (acao == ACAO_VOLTAR_MENU) {
+                    reiniciar_nome(&fases);
+                    tela = TELA_MENU;
+                }
+                limpar_teclas(key);
+                limpar_mouse(&mouse);
+                redraw = true;
+                break;
+            }
+
+            if (tela == TELA_RANKING) {
+                int acao = atualizar_ranking(&ranking, key);
 
                 if (acao == ACAO_VOLTAR_MENU) {
                     tela = TELA_MENU;
+                }
+                limpar_teclas(key);
+                limpar_mouse(&mouse);
+                redraw = true;
+                break;
+            }
+
+            if (tela == TELA_RELATORIO) {
+                bool fim_antes = relatorio.fim;
+                int acao = atualizar_relatorio(&relatorio, &alternativas, &partida, key, &mouse, disp_x);
+
+                if (!fim_antes && relatorio.fim) {
+                    ordenar_ranking(&ranking, partida.fase, partida.nome, partida.pontuacao);
+                    salvar_ranking(&ranking, partida.fase);
+                }
+
+                if (acao == ACAO_VOLTAR_MENU) {
+                    ranking.fase_vista = partida.fase;
+                    tela = TELA_RANKING;
                     reiniciar_jogo(&spy, &guarda, &diario, &partida, disp_x, disp_y);
                 }
                 limpar_teclas(key);
@@ -355,6 +403,13 @@ int main()
             }
             key[event.keyboard.keycode] = KEY_SEEN | KEY_DOWN;
             break;
+
+        case ALLEGRO_EVENT_KEY_CHAR:
+            if (tela == TELA_FASES) {
+                digitar_nome(&fases, event.keyboard.unichar, event.keyboard.keycode);
+            }
+            break;
+
         case ALLEGRO_EVENT_KEY_UP:
             key[event.keyboard.keycode] &= ~KEY_DOWN;
             break;
@@ -372,6 +427,12 @@ int main()
                 if (tela == TELA_RELATORIO) {
                     desenhar_relatorio(&relatorio, &alternativas, &partida, disp_x, disp_y);
                 }
+                else if (tela == TELA_FASES) {
+                    desenhar_fases(&fases, disp_x, disp_y);
+                }
+                else if (tela == TELA_RANKING) {
+                    desenhar_ranking(&ranking, disp_x, disp_y);
+                }
                 else {
                     desenhar_telas(tela, &menu, &pausa, &instrucoes, &creditos, &diario, disp_x);
                 }
@@ -386,8 +447,6 @@ int main()
             al_clear_to_color(al_map_rgb(0, 0, 0));
             desenhar_cenario();
             desenhar_granada(&granada);
-            al_draw_textf(font, branco, disp_x - 10, 5, ALLEGRO_ALIGN_RIGHT, "Vivo: %d", spy.vivo);
-            al_draw_textf(font, branco, 0, 0, 0, "X: %.1f Y: %.1f", spy.x, spy.y);
 
             renderizar_personagem(&spy, spritesheet, total_frames);
             renderizar_personagem(&(guarda.p), spritesheet, total_frames);

@@ -28,7 +28,7 @@ bool iniciar_menu(Menu* menu) { // carrega as fontes e preenche o menu principal
     menu->titulo_cima = "ESPECTRO";
     menu->titulo_baixo = "VERMELHO";
     menu->nomes[0] = "JOGAR";
-    menu->nomes[1] = "OPÇÕES";
+    menu->nomes[1] = "RANKING";
     menu->nomes[2] = "CONTROLES";
     menu->nomes[3] = "CRÉDITOS";
     menu->nomes[4] = "SAIR";
@@ -96,6 +96,9 @@ int atualizar_menu(Menu* menu, unsigned char* key, Mouse* mouse, float disp_x) {
     if (escolher_opcao(menu, key, mouse, disp_x)) {
         if (menu->opcao == 0) {
             return ACAO_JOGAR;
+        }
+        if (menu->opcao == 1) {
+            return ACAO_RANKING;
         }
         if (menu->opcao == 2) {
             return ACAO_INSTRUCOES;
