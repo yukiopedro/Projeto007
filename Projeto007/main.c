@@ -227,17 +227,19 @@ int main()
     bool done = false;
     bool redraw = true;
     bool rodando = true;
+    int total_frames = 0;
+
     int tela = TELA_MENU;
 
     ALLEGRO_EVENT event;
+
+    ALLEGRO_BITMAP* spritesheet = al_load_bitmap(LOCAL_SPRITESHEET);
 
     Personagem spy;
     criar_player(&spy, 50, 50);
 
     NPC guarda;
     criar_npc(&guarda, 80, 80, GUARDA);
-
-    float gravidade = 10;
 
     ALLEGRO_COLOR vermelho = al_map_rgb(255, 0, 0);
     ALLEGRO_COLOR azul = al_map_rgb(0, 0, 255);
@@ -270,6 +272,7 @@ int main()
             break;
 
         case ALLEGRO_EVENT_TIMER:
+            total_frames++;
             if (tela == TELA_RELATORIO) {
                 int acao = atualizar_relatorio(&relatorio, &alternativas, &partida, key, &mouse, disp_x);
 
@@ -385,9 +388,11 @@ int main()
             desenhar_granada(&granada);
             al_draw_textf(font, branco, disp_x - 10, 5, ALLEGRO_ALIGN_RIGHT, "Vivo: %d", spy.vivo);
             al_draw_textf(font, branco, 0, 0, 0, "X: %.1f Y: %.1f", spy.x, spy.y);
-            al_draw_filled_rectangle(spy.x, spy.y, spy.x + spy.tam_x, spy.y + spy.tam_y, vermelho);
-            al_draw_filled_rectangle(guarda.p.x, guarda.p.y, guarda.p.x + guarda.p.tam_x, guarda.p.y + guarda.p.tam_y, azul);
-            al_draw_filled_rectangle(guarda.cone_x, guarda.cone_y, guarda.cone_x + guarda.cone_w, guarda.cone_y + guarda.cone_h, branco);
+
+            renderizar_personagem(&spy, spritesheet, total_frames);
+            renderizar_personagem(&(guarda.p), spritesheet, total_frames);
+            renderizar_lanterna(&guarda, spritesheet);
+
             int segundos = partida.frames / 30;
             al_draw_textf(menu.fonte_botao, branco, disp_x / 2, 10, ALLEGRO_ALIGN_CENTER, "%02d:%02d", segundos / 60, segundos % 60);
             desenhar_aviso(&diario, disp_x);
@@ -408,14 +413,9 @@ int main()
 
             float y_anterior = spy.y;
 
-            spy.x += spy.vel_x;
-            spy.y += spy.vel_y;
+            mover_player(&spy);
 
             colisao_plataforma(&spy, y_anterior);
-
-            if (spy.grounded) {
-                spy.vel_x -= spy.vel_x / 2.5;
-            }
 
             if (spy.y + spy.tam_y >= disp_y || spy.y <= 0)
                 spy.vel_y *= -1;
