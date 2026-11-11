@@ -128,8 +128,8 @@ bool colisao(int ax1, int ay1, int ax2, int ay2, int bx1, int by1, int bx2, int 
 
 void reiniciar_jogo(Personagem* spy, NPC* guarda, Diario* diario, Partida* partida, float disp_x, float disp_y) { // reinicia o jogo
     iniciar_cenario(disp_x, disp_y);
-    criar_player(spy, 50, 50);
-    criar_npc(guarda, 80, 80, GUARDA);
+    criar_player(spy, 50, 650);
+    criar_npc(guarda, 1100, 650, GUARDA);
     granada.used = false;
     reiniciar_diario(diario);
     reiniciar_partida(partida);
@@ -248,7 +248,7 @@ int main()
     criar_player(&spy, 50, 50);
 
     NPC guarda;
-    criar_npc(&guarda, 80, 80, GUARDA);
+    criar_npc(&guarda, 1100, 650, GUARDA);
 
     ALLEGRO_COLOR vermelho = al_map_rgb(255, 0, 0);
     ALLEGRO_COLOR azul = al_map_rgb(0, 0, 255);
@@ -293,6 +293,7 @@ int main()
                     tela = TELA_JOGO;
                 }
                 if (acao == ACAO_VOLTAR_MENU) {
+                    reiniciar_nome(&fases);
                     tela = TELA_MENU;
                 }
                 limpar_teclas(key);
@@ -446,8 +447,6 @@ int main()
             al_clear_to_color(al_map_rgb(0, 0, 0));
             desenhar_cenario();
             desenhar_granada(&granada);
-            al_draw_textf(font, branco, disp_x - 10, 5, ALLEGRO_ALIGN_RIGHT, "Vivo: %d", spy.vivo);
-            al_draw_textf(font, branco, 0, 0, 0, "X: %.1f Y: %.1f", spy.x, spy.y);
 
             renderizar_personagem(&spy, spritesheet, total_frames);
             renderizar_personagem(&(guarda.p), spritesheet, total_frames);
